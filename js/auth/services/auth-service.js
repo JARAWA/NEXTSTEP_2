@@ -1,5 +1,6 @@
 /**
  * Core authentication service for Firebase auth operations
+ * With premium subscription integration
  */
 import { 
     createUserWithEmailAndPassword, 
@@ -12,11 +13,29 @@ import {
     sendEmailVerification
 } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js";
 
+import { 
+    getFirestore,
+    doc, 
+    getDoc
+} from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
+
 import { auth, googleProvider } from './firebase-config.js';
 import { Validator, validateForm } from '../utils/validation.js';
 import { ErrorHandler } from '../utils/error-handler.js';
 import { TokenManager } from '../services/token-manager.js';
 import UserService from './user-service.js';
+
+// Import the subscription manager if available
+let SubscriptionManager = null;
+try {
+    import('/js/subscription-manager.js').then(module => {
+        SubscriptionManager = module.default;
+    }).catch(err => {
+        console.log('Subscription manager not loaded:', err);
+    });
+} catch (e) {
+    console.log('Error importing subscription manager:', e);
+}
 
 class AuthService {
     // Class properties
@@ -25,6 +44,7 @@ class AuthService {
     static authUnsubscribe = null;
     static userProfileFetched = false;
     static userRole = 'student'; // Default role
+    static isPremium = false; // Premium subscription status
     
     // Initialize Authentication Service
     static async init() {
@@ -84,7 +104,10 @@ class AuthService {
                         
                         // Second phase: Fetch profile and set up role-specific UI asynchronously
                         // This prevents blocking the auth flow while fetching profile data
-                        this.getUserProfileAndSetupUI(user);
+                        await this.getUserProfileAndSetupUI(user);
+                        
+                        // Check premium status after profile is loaded
+                        await this.checkPremiumStatus(user);
                         
                         if (window.Modal && typeof window.Modal.hide === 'function') {
                             window.Modal.hide();
@@ -107,12 +130,53 @@ class AuthService {
                 this.user = null;
                 this.isLoggedIn = false;
                 this.userRole = 'student'; // Reset to default
+                this.isPremium = false; // Reset premium status
                 TokenManager.clearTokenData();
                 
                 this.updateUI();
                 this.disableLoginRequiredFeatures();
             }
         });
+    }
+    
+    // Check premium status
+    static async checkPremiumStatus(user) {
+        if (!user) return false;
+        
+        try {
+            const db = getFirestore();
+            const userDoc = await getDoc(doc(db, "users", user.uid));
+            
+            if (userDoc.exists()) {
+                const userData = userDoc.data();
+                
+                // Check if user has subscription and if it's still valid
+                if (userData.subscription) {
+                    const now = new Date();
+                    const expiryDate = new Date(userData.subscription.expiryDate);
+                    
+                    this.isPremium = expiryDate > now && userData.subscription.isActive;
+                    console.log(`Premium status: ${this.isPremium ? 'Active' : 'Inactive'}, Expiry: ${expiryDate.toLocaleDateString()}`);
+                } else {
+                    this.isPremium = false;
+                    console.log('No subscription found');
+                }
+            } else {
+                this.isPremium = false;
+                console.log('User document not found');
+            }
+
+            // If subscription manager exists, update its premium status
+            if (window.SubscriptionManager) {
+                window.SubscriptionManager.isPremium = this.isPremium;
+            }
+            
+            return this.isPremium;
+        } catch (error) {
+            console.error("Error checking premium status:", error);
+            this.isPremium = false;
+            return false;
+        }
     }
     
     // New method to handle profile fetching and UI setup separately
@@ -232,6 +296,7 @@ class AuthService {
             redirectUrl.searchParams.append('token', token);
             redirectUrl.searchParams.append('source', 'nextstep-nexn');
             redirectUrl.searchParams.append('uid', this.user.uid);
+            redirectUrl.searchParams.append('premium', this.isPremium ? '1' : '0');
 
             // Store the token in sessionStorage for retrieval on the destination page
             sessionStorage.setItem('josaa_auth_token', token);
@@ -248,12 +313,15 @@ class AuthService {
         }
     }
     
-    // Button Setup
+    // Button Setup with premium check
     static setupAuthButtons() {
         const loginRequiredButtons = document.querySelectorAll('[data-requires-login="true"]');
         
         loginRequiredButtons.forEach(btn => {
             const targetUrl = btn.getAttribute('href') || btn.dataset.href;
+            const requiresPremium = btn.hasAttribute('data-requires-premium') ? 
+                                   btn.getAttribute('data-requires-premium') === 'true' : 
+                                   false;
             
             btn.addEventListener('click', async (e) => {
                 e.preventDefault();
@@ -265,8 +333,57 @@ class AuthService {
                     return;
                 }
 
+                // Check for premium requirement
+                if (requiresPremium && !this.isPremium) {
+                    if (window.SubscriptionManager) {
+                        window.SubscriptionManager.showSubscriptionModal();
+                    } else {
+                        alert('Premium subscription required for this feature.');
+                    }
+                    return;
+                }
+
                 if (targetUrl) {
                     await this.handleSecureRedirect(targetUrl);
+                }
+            });
+        });
+        
+        // Also handle premium-only buttons
+        const premiumOnlyButtons = document.querySelectorAll('[data-requires-premium="true"]:not([data-requires-login="true"])');
+        
+        premiumOnlyButtons.forEach(btn => {
+            // Only handle buttons that don't also require login (handled above)
+            const targetUrl = btn.getAttribute('href') || btn.dataset.href;
+            
+            btn.addEventListener('click', async (e) => {
+                e.preventDefault();
+                
+                // Check login first
+                if (!this.isLoggedIn) {
+                    if (window.Modal && typeof window.Modal.show === 'function') {
+                        window.Modal.show();
+                    }
+                    return;
+                }
+                
+                // Check premium
+                if (!this.isPremium) {
+                    if (window.SubscriptionManager) {
+                        window.SubscriptionManager.showSubscriptionModal();
+                    } else {
+                        alert('Premium subscription required for this feature.');
+                    }
+                    return;
+                }
+                
+                // Proceed if premium
+                if (targetUrl) {
+                    if (btn.getAttribute('target') === '_blank') {
+                        window.open(targetUrl, '_blank');
+                    } else {
+                        await this.handleSecureRedirect(targetUrl);
+                    }
                 }
             });
         });
@@ -390,21 +507,21 @@ class AuthService {
             );
 
          // Check if email is verified
-if (!userCredential.user.emailVerified) {
-    // Only send verification if they haven't been sent one recently
-    const lastSent = localStorage.getItem(`verification_sent_${emailInput.value.trim()}`);
-    const now = Date.now();
-    if (!lastSent || (now - parseInt(lastSent)) > 5 * 60 * 1000) { // 5 minutes cooldown
-        await sendEmailVerification(userCredential.user);
-        localStorage.setItem(`verification_sent_${emailInput.value.trim()}`, now.toString());
-    }
-    
-    if (window.showToast) {
-        window.showToast('Please check your email to verify your account.', 'warning');
-    }
-    // Don't sign them out - let them use the app with limited functionality
-    return;
-}
+            if (!userCredential.user.emailVerified) {
+                // Only send verification if they haven't been sent one recently
+                const lastSent = localStorage.getItem(`verification_sent_${emailInput.value.trim()}`);
+                const now = Date.now();
+                if (!lastSent || (now - parseInt(lastSent)) > 5 * 60 * 1000) { // 5 minutes cooldown
+                    await sendEmailVerification(userCredential.user);
+                    localStorage.setItem(`verification_sent_${emailInput.value.trim()}`, now.toString());
+                }
+                
+                if (window.showToast) {
+                    window.showToast('Please check your email to verify your account.', 'warning');
+                }
+                // Don't sign them out - let them use the app with limited functionality
+                return;
+            }
 
             // Get and store authentication token
             const token = await TokenManager.getFirebaseToken(userCredential.user);
@@ -528,13 +645,27 @@ if (!userCredential.user.emailVerified) {
         });
 
         if (userInfoContainer && this.isLoggedIn) {
+            // Add premium badge if user has premium status
+            const premiumBadge = this.isPremium ? 
+                `<span class="premium-badge">
+                    <i class="fas fa-crown"></i> Premium
+                </span>` : '';
+            
+            // Add premium status in dropdown if premium
+            const premiumStatus = this.isPremium ?
+                `<div class="premium-status">
+                    <i class="fas fa-crown"></i> Premium Active
+                </div>` : '';
+                
             userInfoContainer.innerHTML = `<div class="user-dropdown">
                 <button class="user-dropdown-toggle">
                     <i class="fas fa-user-circle"></i>
                     <span class="username">${this.user.displayName || this.user.email}</span>
+                    ${premiumBadge}
                     <i class="fas fa-chevron-down"></i>
                 </button>
                 <div class="user-dropdown-menu">
+                    ${premiumStatus}
                     ${this.getRoleSpecificMenuItems()}
                     <a href="#" class="logout-link" onclick="Auth.logout(); return false;">
                         <i class="fas fa-sign-out-alt"></i> Logout
@@ -558,6 +689,16 @@ if (!userCredential.user.emailVerified) {
                 <i class="fas fa-sign-in-alt"></i> Login
                </button>`;
         }
+        
+        // Update premium-required buttons
+        this.updatePremiumButtons();
+    }
+
+    // Update premium buttons based on subscription status
+    static updatePremiumButtons() {
+        document.querySelectorAll('[data-requires-premium="true"]').forEach(btn => {
+            btn.classList.toggle('premium-active', this.isPremium);
+        });
     }
 
     // Get role-specific menu items
@@ -599,6 +740,12 @@ if (!userCredential.user.emailVerified) {
 
     static disableLoginRequiredFeatures() {
         document.querySelectorAll('[data-requires-login="true"]').forEach(el => {
+            el.disabled = true;
+            el.classList.add('disabled');
+        });
+        
+        // Also disable premium features
+        document.querySelectorAll('[data-requires-premium="true"]').forEach(el => {
             el.disabled = true;
             el.classList.add('disabled');
         });
