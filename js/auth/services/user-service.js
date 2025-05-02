@@ -1,5 +1,6 @@
 /**
  * User service for managing user profile data in Firestore
+ * Added premium subscription methods
  */
 import { 
     doc, 
@@ -755,6 +756,135 @@ class UserService {
         } catch (error) {
             console.error("Error checking admin status:", error);
             return false;
+        }
+    }
+
+    // ======= PREMIUM SUBSCRIPTION METHODS =======
+
+    /**
+     * Check premium subscription status for a user
+     * @param {Object} user - Firebase user object
+     * @returns {Promise<Object|null>} Subscription data or null
+     */
+    static async checkPremiumStatus(user) {
+        if (!user || !user.uid) return null;
+        
+        try {
+            // First try to get user data from cache
+            if (this.userData && this.userData.subscription) {
+                const now = new Date();
+                const expiryDate = new Date(this.userData.subscription.expiryDate);
+                
+                return {
+                    isActive: expiryDate > now && this.userData.subscription.isActive,
+                    expiryDate: this.userData.subscription.expiryDate,
+                    ...this.userData.subscription
+                };
+            }
+            
+            // If no cached data, fetch from Firestore
+            const userData = await this.getUserData(user);
+            
+            if (userData && userData.subscription) {
+                const now = new Date();
+                const expiryDate = new Date(userData.subscription.expiryDate);
+                
+                return {
+                    isActive: expiryDate > now && userData.subscription.isActive,
+                    expiryDate: userData.subscription.expiryDate,
+                    ...userData.subscription
+                };
+            }
+            
+            return null;
+        } catch (error) {
+            console.error("Error checking premium status:", error);
+            return null;
+        }
+    }
+
+    /**
+     * Update premium subscription status
+     * @param {Object} user - Firebase user object
+     * @param {Object} subscriptionData - Subscription data to update
+     * @returns {Promise<boolean>} Whether update was successful
+     */
+    static async updateSubscription(user, subscriptionData) {
+        if (!user || !user.uid) return false;
+        
+        try {
+            // Add timestamp to subscription data
+            const dataToUpdate = {
+                subscription: {
+                    ...subscriptionData,
+                    updatedAt: new Date().toISOString()
+                }
+            };
+            
+            // Update user profile
+            const success = await this.updateUserProfile(user, dataToUpdate);
+            
+            if (success) {
+                console.log("Premium subscription updated successfully");
+                
+                // Update cached data
+                if (this.userData) {
+                    this.userData.subscription = dataToUpdate.subscription;
+                }
+                
+                return true;
+            }
+            
+            return false;
+        } catch (error) {
+            console.error("Error updating subscription:", error);
+            return false;
+        }
+    }
+
+    /**
+     * Verify subscription code and update status if valid
+     * @param {Object} user - Firebase user object
+     * @param {string} code - Subscription code to verify
+     * @returns {Promise<Object|null>} Subscription data if successful, null otherwise
+     */
+    static async verifySubscriptionCode(user, code) {
+        if (!user || !user.uid || !code) return null;
+        
+        // In a production environment, this would be verified on a secure server
+        // For demo purposes, we'll use some predefined codes
+        const validCodes = {
+            "NEXTSTEP2025": { duration: 365 }, // 1 year
+            "PREMIUM3MONTH": { duration: 90 },  // 3 months
+            "TRYNEXTSTEP": { duration: 7 }      // 1 week trial
+        };
+        
+        if (!validCodes[code]) {
+            return null; // Invalid code
+        }
+        
+        try {
+            // Calculate expiry date
+            const now = new Date();
+            const expiryDate = new Date(now);
+            expiryDate.setDate(now.getDate() + validCodes[code].duration);
+            
+            // Create subscription data
+            const subscriptionData = {
+                isActive: true,
+                activatedAt: now.toISOString(),
+                expiryDate: expiryDate.toISOString(),
+                duration: validCodes[code].duration,
+                code: code
+            };
+            
+            // Update subscription
+            const success = await this.updateSubscription(user, subscriptionData);
+            
+            return success ? subscriptionData : null;
+        } catch (error) {
+            console.error("Error verifying subscription code:", error);
+            return null;
         }
     }
 }
