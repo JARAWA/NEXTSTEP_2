@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NextStep Admin - Subscription Dashboard</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="../css/main.css">
+    <link rel="stylesheet" href="css/admin.css">
+    <link rel="stylesheet" href="css/subscription-dashboard.css">
+</head>
+<body class="admin-body">
+    <div class="admin-container">
+        <!-- Admin Sidebar -->
+        <div class="admin-sidebar">
+            <div class="logo-container">
+                <img src="../admin/images/nextstep_logo.jpeg" alt="NextStep Logo" class="admin-logo">
+                <h2>NextStep</h2>
+                <p>Admin Panel</p>
+            </div>
+            
+            <nav class="admin-nav">
+                <ul>
+                    <li><a href="dashboard.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                    <li><a href="users.html"><i class="fas fa-users"></i> User Management</a></li>
+                    <li class="active"><a href="subscription-dashboard.html"><i class="fas fa-crown"></i> Subscriptions</a></li>
+                    <li><a href="college-data.html"><i class="fas fa-university"></i> College Data</a></li>
+                    <li><a href="analytics.html"><i class="fas fa-chart-bar"></i> Analytics</a></li>
+                    <li><a href="settings.html"><i class="fas fa-cog"></i> Settings</a></li>
+                </ul>
+            </nav>
+            
+            <div class="admin-sidebar-footer">
+                <a href="../index.html"><i class="fas fa-home"></i> Back to Site</a>
+                <button id="admin-logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</button>
+            </div>
+        </div>
+        
+        <!-- Admin Content -->
+        <div class="admin-content">
+            <!-- Admin Header -->
+            <header class="admin-header">
+                <div class="header-search">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="subscription-search" placeholder="Search by name or email...">
+                </div>
+                
+                <div class="header-right">
+                    <div class="notifications">
+                        <i class="fas fa-bell"></i>
+                        <span class="badge">3</span>
+                    </div>
+                    
+                    <div class="admin-profile">
+                        <img src="../admin/images/avatar-placeholder.png" alt="Admin" class="avatar">
+                        <span class="admin-name">Admin Name</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                </div>
+            </header>
+            
+            <!-- Subscription Dashboard Content -->
+            <main class="dashboard-main">
+                <div class="page-header">
+                    <h1>Subscription Dashboard</h1>
+                    <div class="header-actions">
+                        <button class="btn-primary" id="batch-add-btn">
+                            <i class="fas fa-plus"></i> Batch Activate
+                        </button>
+                        <button class="btn-secondary" id="export-subs-btn">
+                            <i class="fas fa-file-export"></i> Export
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Subscription Stats Cards -->
+                <div class="stats-grid">
+                    <div class="stat-card premium-card">
+                        <div class="stat-icon"><i class="fas fa-crown"></i></div>
+                        <div class="stat-content">
+                            <h3>Active Subscriptions</h3>
+                            <div class="stat-value" id="active-subscriptions">--</div>
+                            <div class="stat-change positive">+5.2% <i class="fas fa-arrow-up"></i></div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card expired-card">
+                        <div class="stat-icon"><i class="fas fa-hourglass-end"></i></div>
+                        <div class="stat-content">
+                            <h3>Expired Subscriptions</h3>
+                            <div class="stat-value" id="expired-subscriptions">--</div>
+                            <div class="stat-change negative">+12.3% <i class="fas fa-arrow-up"></i></div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card renewal-card">
+                        <div class="stat-icon"><i class="fas fa-sync"></i></div>
+                        <div class="stat-content">
+                            <h3>Renewals This Month</h3>
+                            <div class="stat-value" id="monthly-renewals">--</div>
+                            <div class="stat-change positive">+18.7% <i class="fas fa-arrow-up"></i></div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card revenue-card">
+                        <div class="stat-icon"><i class="fas fa-rupee-sign"></i></div>
+                        <div class="stat-content">
+                            <h3>Monthly Revenue</h3>
+                            <div class="stat-value" id="monthly-revenue">--</div>
+                            <div class="stat-change positive">+8.7% <i class="fas fa-arrow-up"></i></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Filter Section -->
+                <div class="filter-section">
+                    <div class="filter-container">
+                        <div class="filter-group">
+                            <label for="status-filter">Status</label>
+                            <select id="status-filter">
+                                <option value="all">All Statuses</option>
+                                <option value="active">Active</option>
+                                <option value="expired">Expired</option>
+                                <option value="canceled">Canceled</option>
+                            </select>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label for="duration-filter">Duration</label>
+                            <select id="duration-filter">
+                                <option value="all">All Durations</option>
+                                <option value="7">1 Week</option>
+                                <option value="30">1 Month</option>
+                                <option value="90">3 Months</option>
+                                <option value="180">6 Months</option>
+                                <option value="365">1 Year</option>
+                            </select>
+                        </div>
+                        
+                        <div class="filter-group date-filter">
+                            <label for="date-filter">Expiry Date</label>
+                            <div class="date-inputs">
+                                <input type="date" id="date-from" placeholder="From">
+                                <span>to</span>
+                                <input type="date" id="date-to" placeholder="To">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="filter-actions">
+                        <button id="apply-filters" class="btn-primary">Apply Filters</button>
+                        <button id="clear-filters" class="btn-secondary">Clear Filters</button>
+                    </div>
+                </div>
+                
+                <!-- Subscriptions Table -->
+                <div class="admin-table-container">
+                    <table class="admin-table" id="subscriptions-table">
+                        <thead>
+                            <tr>
+                                <th><input type="checkbox" id="select-all-subs"></th>
+                                <th>User <i class="fas fa-sort"></i></th>
+                                <th>Email</th>
+                                <th>Status</th>
+                                <th>Code</th>
+                                <th>Activated <i class="fas fa-sort"></i></th>
+                                <th>Expires <i class="fas fa-sort"></i></th>
+                                <th>Duration</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td colspan="9" class="loading-cell">Loading subscriptions...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Pagination -->
+                <div class="pagination-container">
+                    <div class="pagination-info">
+                        Showing <span id="showing-start">0</span> to <span id="showing-end">0</span> of <span id="total-subs-count">0</span> subscriptions
+                    </div>
+                    <div class="pagination-controls">
+                        <button id="prev-page" disabled><i class="fas fa-chevron-left"></i></button>
+                        <div id="pagination-numbers">
+                            <!-- Page numbers will be inserted here -->
+                        </div>
+                        <button id="next-page"><i class="fas fa-chevron-right"></i></button>
+                    </div>
+                    <div class="pagination-size">
+                        <label for="page-size">Show</label>
+                        <select id="page-size">
+                            <option value="10">10</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                        <span>per page</span>
+                    </div>
+                </div>
+                
+                <!-- Subscription Summary Section -->
+                <section class="subscription-summary-section">
+                    <div class="section-header">
+                        <h2>Subscription Analytics</h2>
+                        <div class="chart-filters">
+                            <button class="chart-filter active" data-period="month">Month</button>
+                            <button class="chart-filter" data-period="quarter">Quarter</button>
+                            <button class="chart-filter" data-period="year">Year</button>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-grid">
+                        <div class="chart-card">
+                            <h3>Subscription Growth</h3>
+                            <div class="chart-container" id="subscription-growth-chart">
+                                <!-- Chart will be rendered here -->
+                                <div class="chart-placeholder">
+                                    <i class="fas fa-chart-line"></i>
+                                    <p>Loading chart data...</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="chart-card">
+                            <h3>Revenue by Subscription Type</h3>
+                            <div class="chart-container" id="revenue-by-type-chart">
+                                <!-- Chart will be rendered here -->
+                                <div class="chart-placeholder">
+                                    <i class="fas fa-chart-pie"></i>
+                                    <p>Loading chart data...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- Upcoming Renewals & Expirations -->
+                <section class="admin-section">
+                    <div class="section-header">
+                        <h2>Upcoming Expirations (Next 7 Days)</h2>
+                        <button class="btn-secondary" id="notify-expiring-btn">
+                            <i class="fas fa-bell"></i> Send Reminders
+                        </button>
+                    </div>
+                    
+                    <div class="admin-table-container">
+                        <table class="admin-table" id="expirations-table">
+                            <thead>
+                                <tr>
+                                    <th>User</th>
+                                    <th>Email</th>
+                                    <th>Expires</th>
+                                    <th>Days Left</th>
+                                    <th>Original Duration</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td colspan="6" class="loading-cell">Loading upcoming expirations...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+    
+    <!-- Manage Subscription Modal -->
+    <div id="manageSubscriptionModal" class="admin-modal">
+        <div class="admin-modal-content medium-modal">
+            <div class="admin-modal-header">
+                <h2>Manage Subscription</h2>
+                <button class="admin-modal-close">&times;</button>
+            </div>
+            <div class="admin-modal-body">
+                <form id="subscription-form">
+                    <input type="hidden" id="subscription-user-id">
+                    
+                    <div class="user-details-summary">
+                        <h3 id="subscription-user-name">User Name</h3>
+                        <p id="subscription-user-email">user@example.com</p>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="subscription-status">Subscription Status</label>
+                        <select id="subscription-status" required>
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="subscription-code">Subscription Code</label>
+                        <input type="text" id="subscription-code">
+                        <p class="field-hint">Leave empty to keep existing code</p>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="subscription-duration">Duration (Days)</label>
+                        <select id="subscription-duration" required>
+                            <option value="7">7 days (1 week)</option>
+                            <option value="30">30 days (1 month)</option>
+                            <option value="90">90 days (3 months)</option>
+                            <option value="180">180 days (6 months)</option>
+                            <option value="365" selected>365 days (1 year)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="subscription-expiry">Expiry Date</label>
+                        <input type="date" id="subscription-expiry" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="subscription-notes">Admin Notes</label>
+                        <textarea id="subscription-notes" rows="2" placeholder="Add notes about this subscription"></textarea>
+                    </div>
+                    
+                    <div class="modal-actions">
+                        <button type="button" class="btn-secondary cancel-btn">Cancel</button>
+                        <button type="submit" class="btn-primary save-btn">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Batch Activate Modal -->
+    <div id="batchActivateModal" class="admin-modal">
+        <div class="admin-modal-content medium-modal">
+            <div class="admin-modal-header">
+                <h2>Batch Activate Subscriptions</h2>
+                <button class="admin-modal-close">&times;</button>
+            </div>
+            <div class="admin-modal-body">
+                <form id="batch-activate-form">
+                    <div class="form-group">
+                        <label for="batch-user-emails">User Emails (One per line)</label>
+                        <textarea id="batch-user-emails" rows="5" placeholder="user1@example.com
+user2@example.com
+user3@example.com" required></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="batch-subscription-code">Subscription Code</label>
+                        <select id="batch-subscription-code" required>
+                            <option value="NEXTSTEP2025">NEXTSTEP2025 (1 Year)</option>
+                            <option value="PREMIUM3MONTH">PREMIUM3MONTH (3 Months)</option>
+                            <option value="TRYNEXTSTEP">TRYNEXTSTEP (1 Week Trial)</option>
+                            <option value="custom">Custom Code</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group" id="custom-code-container" style="display: none;">
+                        <label for="custom-code">Custom Code</label>
+                        <input type="text" id="custom-code" placeholder="Enter custom subscription code">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="batch-duration">Duration (Days)</label>
+                        <select id="batch-duration" required>
+                            <option value="7">7 days (1 week)</option>
+                            <option value="30">30 days (1 month)</option>
+                            <option value="90">90 days (3 months)</option>
+                            <option value="180">180 days (6 months)</option>
+                            <option value="365" selected>365 days (1 year)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="batch-notes">Admin Notes</label>
+                        <textarea id="batch-notes" rows="2" placeholder="Add notes about these subscriptions"></textarea>
+                    </div>
+                    
+                    <div class="modal-actions">
+                        <button type="button" class="btn-secondary cancel-btn">Cancel</button>
+                        <button type="submit" class="btn-primary save-btn">Activate Subscriptions</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Confirmation Modal -->
+    <div id="confirmationModal" class="admin-modal">
+        <div class="admin-modal-content small-modal">
+            <div class="admin-modal-header">
+                <h2>Confirm Action</h2>
+                <button class="admin-modal-close">&times;</button>
+            </div>
+            <div class="admin-modal-body">
+                <p id="confirmation-message">Are you sure you want to perform this action?</p>
+                
+                <div class="modal-actions">
+                    <button class="btn-secondary cancel-btn">Cancel</button>
+                    <button class="btn-danger confirm-btn">Confirm</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase and Scripts -->
+    <script type="module">
+      // Import the functions you need from the SDKs
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
+      import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js";
+      import { getFirestore } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
+
+      // Your web app's Firebase configuration
+      const firebaseConfig = {
+        apiKey: "AIzaSyC7tvZe9NeHRhYuTVrQnkaSG7Nkj3ZS40U",
+        authDomain: "nextstep-log.firebaseapp.com",
+        projectId: "nextstep-log",
+        storageBucket: "nextstep-log.firebasestorage.app",
+        messagingSenderId: "9308831285",
+        appId: "1:9308831285:web:d55ed6865804c50f743b7c",
+        measurementId: "G-BPGP3TBN3N"
+      };
+
+      // Initialize Firebase
+      const app = initializeApp(firebaseConfig);
+      const auth = getAuth(app);
+      const db = getFirestore(app);
+
+      // Export for other scripts
+      window.firebaseAuth = auth;
+      window.firebaseDb = db;
+      
+      // Check authentication status for admin
+      onAuthStateChanged(auth, (user) => {
+        if (!user) {
+          // Redirect to login page if not authenticated
+          window.location.href = '../index.html';
+        }
+      });
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+    <script type="module" src="js/subscription-dashboard.js"></script>
+</body>
+</html>
