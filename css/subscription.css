@@ -1,3 +1,8 @@
+/* 
+ * subscription.css
+ * Complete styles for premium subscription functionality
+ */
+
 /* Premium Subscription Modal Styles */
 .subscription-modal {
     max-width: 800px;
@@ -305,4 +310,18 @@
     justify-content: center;
     font-size: 10px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Premium active buttons */
+[data-requires-premium="true"].premium-active::after {
+    background: linear-gradient(135deg, #34A853 0%, #26873e 100%);
+    color: white;
+    content: '\f00c'; /* Checkmark icon */
+}
+
+/* Disable button styling */
+.disabled {
+    opacity: 0.6;
+    cursor: not-allowed !important;
+    pointer-events: none;
 }
