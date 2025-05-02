@@ -1,0 +1,308 @@
+/* Premium Subscription Modal Styles */
+.subscription-modal {
+    max-width: 800px;
+    width: 90%;
+}
+
+.subscription-modal .modal-header {
+    background: linear-gradient(135deg, #006B6B 0%, #004242 100%);
+    color: white;
+    padding: 15px 20px;
+    border-radius: 10px 10px 0 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.subscription-modal .modal-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.subscription-modal .modal-header h2 i {
+    color: gold;
+}
+
+.subscription-modal .modal-body {
+    padding: 20px;
+}
+
+.subscription-message {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.subscription-message p {
+    font-size: 1.1rem;
+    color: #333;
+}
+
+.subscription-options {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 30px;
+}
+
+@media (min-width: 768px) {
+    .subscription-options {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+.subscription-option {
+    background-color: #f9f9f9;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.subscription-option:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+}
+
+.subscription-option h3 {
+    font-size: 1.2rem;
+    color: #006B6B;
+    margin-top: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.subscription-option p {
+    color: #555;
+    margin-bottom: 20px;
+    font-size: 0.95rem;
+}
+
+.option-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.payment-btn, .whatsapp-btn, .activate-btn {
+    width: 100%;
+    padding: 10px;
+    text-align: center;
+    font-weight: 500;
+    transition: all 0.3s;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+}
+
+.payment-btn {
+    background-color: #5A31F4;
+    color: white;
+}
+
+.payment-btn:hover {
+    background-color: #4920d0;
+}
+
+.whatsapp-btn {
+    background-color: #25D366;
+    color: white;
+}
+
+.whatsapp-btn:hover {
+    background-color: #128C7E;
+}
+
+.subscription-form {
+    margin-top: 20px;
+}
+
+.subscription-input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 1rem;
+    margin-bottom: 10px;
+}
+
+.subscription-input:focus {
+    border-color: #006B6B;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(0, 107, 107, 0.2);
+}
+
+.activate-btn {
+    background-color: #006B6B;
+    color: white;
+}
+
+.activate-btn:hover {
+    background-color: #004242;
+}
+
+.error-message {
+    color: #e74c3c;
+    font-size: 0.9rem;
+    margin-top: 5px;
+    display: none;
+}
+
+.error-message.show {
+    display: block;
+}
+
+/* Animation for the modal */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.subscription-modal .modal-content {
+    animation: fadeInUp 0.4s ease-out;
+}
+
+/* Premium Badge Styles */
+.premium-badge {
+    display: inline-flex;
+    align-items: center;
+    background: linear-gradient(135deg, #ffd700 0%, #ffcc00 100%);
+    color: #333;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border-radius: 12px;
+    padding: 2px 8px;
+    margin-left: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    animation: shine 2s ease-in-out infinite;
+}
+
+.premium-badge i {
+    color: #333;
+    margin-right: 4px;
+    font-size: 0.7rem;
+}
+
+.premium-status {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #ffd700 0%, #ffcc00 100%);
+    color: #333;
+    font-size: 0.9rem;
+    font-weight: 500;
+    border-radius: 4px;
+    padding: 8px;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.premium-status i {
+    color: #333;
+    margin-right: 8px;
+}
+
+/* User Dropdown Styling for Premium */
+.user-dropdown-toggle {
+    position: relative;
+    display: flex;
+    align-items: center;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 8px 12px;
+    color: #333;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.user-dropdown-toggle:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+    border-radius: 4px;
+}
+
+.user-dropdown-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    min-width: 200px;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(10px);
+    transition: all 0.3s ease;
+}
+
+.user-dropdown-menu.active {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.user-dropdown-menu a {
+    display: flex;
+    align-items: center;
+    padding: 10px 15px;
+    color: #333;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.user-dropdown-menu a i {
+    margin-right: 10px;
+    width: 16px;
+    text-align: center;
+}
+
+.user-dropdown-menu a:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+/* Animation for premium badge */
+@keyframes shine {
+    0% {
+        box-shadow: 0 0 5px rgba(255, 215, 0, 0.3);
+    }
+    50% {
+        box-shadow: 0 0 15px rgba(255, 215, 0, 0.7);
+    }
+    100% {
+        box-shadow: 0 0 5px rgba(255, 215, 0, 0.3);
+    }
+}
+
+/* Premium required button styling */
+[data-requires-premium="true"] {
+    position: relative;
+}
+
+[data-requires-premium="true"]::after {
+    content: '\f521'; /* Crown icon Unicode from Font Awesome */
+    font-family: 'Font Awesome 5 Free';
+    font-weight: 900;
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: linear-gradient(135deg, #ffd700 0%, #ffcc00 100%);
+    color: #333;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
