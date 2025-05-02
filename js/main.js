@@ -10,6 +10,26 @@ document.addEventListener('DOMContentLoaded', function() {
         loadComponent('footer-container', 'components/footer.html'),
         loadComponent('modal-container', 'components/modal.html')
     ]).then(() => {
+        // Add subscription modal to the document
+        loadComponent('subscription-modal-container', 'components/subscription-modal.html')
+            .then(() => {
+                // Initialize subscription manager after loading the modal
+                if (typeof window.initSubscriptionManager === 'function') {
+                    window.initSubscriptionManager();
+                } else {
+                    console.log('Subscription manager initialization function not found');
+                    
+                    // Load the subscription manager script dynamically
+                    const script = document.createElement('script');
+                    script.type = 'module';
+                    script.src = 'js/subscription-manager.js';
+                    document.head.appendChild(script);
+                }
+            })
+            .catch(err => {
+                console.error('Error loading subscription modal:', err);
+            });
+            
         // Ensure Modal and Auth are properly initialized
         console.log('Initializing Modal and Auth');
         
@@ -39,6 +59,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (document.getElementById('user-info')) {
                     // We don't need to initialize dropdown here - Auth will handle it
                     console.log('Auth initialized successfully');
+                    // Update premium status
+                    updatePremiumStatus();
                 } else {
                     console.error('User info container still not found after loading components');
                 }
@@ -49,6 +71,42 @@ document.addEventListener('DOMContentLoaded', function() {
     }).catch(error => {
         console.error('Error loading components:', error);
     });
+    
+    // Add premium UI indicator to the user dropdown
+    function updatePremiumStatus() {
+        if (Auth && Auth.isLoggedIn && Auth.isPremium) {
+            // Find user dropdown and add premium indicator
+            const userDropdown = document.querySelector('.user-dropdown');
+            if (userDropdown) {
+                // Check if premium badge already exists
+                if (!userDropdown.querySelector('.premium-badge')) {
+                    const usernameElement = userDropdown.querySelector('.username');
+                    if (usernameElement) {
+                        // Add premium badge
+                        const premiumBadge = document.createElement('span');
+                        premiumBadge.className = 'premium-badge';
+                        premiumBadge.innerHTML = '<i class="fas fa-crown"></i> Premium';
+                        usernameElement.parentNode.insertBefore(premiumBadge, usernameElement.nextSibling);
+                        
+                        // Add premium status to dropdown menu
+                        const dropdownMenu = userDropdown.querySelector('.user-dropdown-menu');
+                        if (dropdownMenu) {
+                            const premiumStatus = document.createElement('div');
+                            premiumStatus.className = 'premium-status';
+                            premiumStatus.innerHTML = '<i class="fas fa-crown"></i> Premium Active';
+                            dropdownMenu.insertBefore(premiumStatus, dropdownMenu.firstChild);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    // Update premium status when the DOM is fully loaded
+    setTimeout(updatePremiumStatus, 1000);
+    
+    // Expose the function globally
+    window.updatePremiumStatus = updatePremiumStatus;
 });
 
 // Function to initialize user dropdown using UserService - used for manual refresh
@@ -75,15 +133,34 @@ function updateUserInfoUI(userData) {
     const userInfoElement = document.getElementById('user-info');
     if (!userInfoElement) return;
     
+    // Check if user has premium
+    const isPremium = !!(userData.subscription && 
+                        userData.subscription.isActive && 
+                        new Date(userData.subscription.expiryDate) > new Date());
+    
+    // Create premium badge if user has premium
+    const premiumBadge = isPremium ? 
+        `<span class="premium-badge">
+            <i class="fas fa-crown"></i> Premium
+        </span>` : '';
+        
+    // Create premium status in dropdown if premium
+    const premiumStatus = isPremium ?
+        `<div class="premium-status">
+            <i class="fas fa-crown"></i> Premium Active
+        </div>` : '';
+    
     // Create user dropdown UI
     userInfoElement.innerHTML = `
         <div class="user-dropdown">
             <button class="user-dropdown-toggle">
                 <i class="fas fa-user-circle"></i>
                 <span class="username">${userData.displayName || userData.name || userData.email}</span>
+                ${premiumBadge}
                 <i class="fas fa-chevron-down"></i>
             </button>
             <div class="user-dropdown-menu">
+                ${premiumStatus}
                 ${getRoleSpecificMenuItems(userData.userRole)}
                 <a href="#" class="logout-link" onclick="Auth.logout(); return false;">
                     <i class="fas fa-sign-out-alt"></i> Logout
@@ -145,12 +222,25 @@ function getRoleSpecificMenuItems(userRole) {
     }
 }
 
-// Function to load components
+// Function to load components with support for subscription modal
 async function loadComponent(containerId, componentPath) {
     try {
         const response = await fetch(componentPath);
         const data = await response.text();
-        document.getElementById(containerId).innerHTML = data;
+        const container = document.getElementById(containerId);
+        
+        if (container) {
+            container.innerHTML = data;
+        } else if (containerId === 'subscription-modal-container') {
+            // If container doesn't exist, create it for the subscription modal
+            const modalContainer = document.createElement('div');
+            modalContainer.id = containerId;
+            document.body.appendChild(modalContainer);
+            modalContainer.innerHTML = data;
+        } else {
+            console.error(`Container not found: ${containerId}`);
+            throw new Error(`Container not found: ${containerId}`);
+        }
     } catch (error) {
         console.error(`Error loading component ${componentPath}:`, error);
         throw error;
