@@ -251,127 +251,272 @@
     <script type="module" src="js/modal.js"></script>
     <script type="module" src="js/contact.js"></script>
     <script type="module" src="js/subscription-manager.js"></script>
+    
+    <!-- UPDATED: Improved script loading for subscription-fixer.js -->
     <script>
-  // Wait for SubscriptionManager to be fully initialized before loading fixer
-  function waitForSubscriptionManager() {
-    if (window.SubscriptionManager && window.SubscriptionManager.isPremium !== undefined) {
-      // Now load the fixer script
-      const script = document.createElement('script');
-      script.src = 'js/subscription-fixer.js';
-      document.body.appendChild(script);
-    } else {
-      setTimeout(waitForSubscriptionManager, 100);
+    // Function to verify SubscriptionManager is properly initialized
+    function isSubscriptionManagerReady() {
+        return window.SubscriptionManager && 
+               typeof window.SubscriptionManager.isPremium !== 'undefined' &&
+               typeof window.SubscriptionManager.showSubscriptionModal === 'function';
     }
-  }
-  
-  // Start waiting after a small initial delay
-  setTimeout(waitForSubscriptionManager, 500);
-</script>
 
-<!-- Add this debugging script just before the closing </body> tag -->
-<script>
-    // Debug the subscription modal loading
-    console.log('Debug script for subscription modal loaded');
-    
-    // Function to directly test the subscription button
-    function testSubscriptionButton() {
-        const activateButton = document.getElementById('activate-subscription');
-        if (!activateButton) {
-            console.error('Button not found in test function');
-            return;
-        }
-        
-        console.log('Adding direct test event listener to activate button');
-        activateButton.addEventListener('click', function(e) {
-            console.log('DIRECT TEST: Activate button clicked!', e);
-            // Stop event propagation to prevent conflict with other handlers
-            e.stopPropagation();
+    // Wait for SubscriptionManager to be fully initialized before loading fixer
+    function waitForSubscriptionManager() {
+        if (isSubscriptionManagerReady()) {
+            console.log('SubscriptionManager is ready, loading fixer script...');
+            // Cache the premium status before loading the fixer
+            const isPremium = window.SubscriptionManager.isPremium;
+            console.log('Premium status before loading fixer:', isPremium);
             
-            if (window.SubscriptionManager && typeof window.SubscriptionManager.verifySubscriptionCode === 'function') {
-                console.log('Calling SubscriptionManager.verifySubscriptionCode directly');
-                window.SubscriptionManager.verifySubscriptionCode();
-            } else {
-                console.error('SubscriptionManager is not properly initialized');
-                alert('Error: SubscriptionManager not properly initialized');
-            }
-        });
+            // Now load the fixer script
+            const script = document.createElement('script');
+            script.src = 'js/subscription-fixer.js';
+            script.onload = function() {
+                console.log('Subscription fixer loaded, verifying enhancement...');
+                // Verify the enhancement was applied correctly
+                if (window.SubscriptionManager.showSubscriptionModal.toString().includes('this.isPremium')) {
+                    console.log('Premium check successfully applied');
+                } else {
+                    console.warn('Premium check not applied properly, applying manually');
+                    applyManualFix();
+                }
+            };
+            document.body.appendChild(script);
+        } else {
+            console.log('Waiting for SubscriptionManager to initialize...');
+            setTimeout(waitForSubscriptionManager, 100);
+        }
     }
-    
-    // Check if modal elements exist after page load
-    window.addEventListener('load', function() {
-        console.log('Window loaded - checking subscription modal elements');
+
+    // Fallback function to manually apply the fix if needed
+    function applyManualFix() {
+        // Store original method
+        const originalShowModal = window.SubscriptionManager.showSubscriptionModal;
         
-        // Check modal container
-        const modalContainer = document.getElementById('subscription-modal-container');
-        console.log('Modal container exists:', !!modalContainer);
-        
-        // Check main elements
-        const subscriptionModal = document.getElementById('subscriptionModal');
-        const activateButton = document.getElementById('activate-subscription');
-        const subscriptionCodeInput = document.getElementById('subscription-code');
-        const errorElement = document.getElementById('subscription-code-error');
-        
-        console.log('Modal elements check:', {
-            subscriptionModal: !!subscriptionModal,
-            activateButton: !!activateButton,
-            subscriptionCodeInput: !!subscriptionCodeInput,
-            errorElement: !!errorElement
-        });
-        
-        // Check for SubscriptionManager
-        console.log('SubscriptionManager initialized:', !!window.SubscriptionManager);
-        
-        // Test FirebaseAuth
-        console.log('FirebaseAuth initialized:', !!window.firebaseAuth);
-        
-        // Add our direct button test after a short delay to ensure everything is loaded
-        setTimeout(testSubscriptionButton, 1500);
-        
-        // Create a test button to force show the modal
-        const testButton = document.createElement('button');
-        testButton.textContent = 'Test Subscription';
-        testButton.style.position = 'fixed';
-        testButton.style.bottom = '20px';
-        testButton.style.right = '20px';
-        testButton.style.zIndex = '9999';
-        testButton.style.padding = '10px 15px';
-        testButton.style.background = '#3498db';
-        testButton.style.color = 'white';
-        testButton.style.border = 'none';
-        testButton.style.borderRadius = '5px';
-        testButton.style.cursor = 'pointer';
-        testButton.style.fontWeight = 'bold';
-        
-        testButton.onclick = function() {
-            console.log('Test button clicked, showing subscription modal');
-            const modal = document.getElementById('subscriptionModal');
-            if (modal) {
-                modal.style.display = 'block';
-                console.log('Modal displayed via style.display = block');
+        // Override the method with the fix
+        window.SubscriptionManager.showSubscriptionModal = function() {
+            console.log('Manual fix showSubscriptionModal called, isPremium:', this.isPremium);
+            
+            // First check if premium
+            if (this.isPremium) {
+                console.log('User has premium, not showing modal');
+                
+                // Show notification instead
+                if (window.showToast) {
+                    window.showToast('You already have an active premium subscription!', 'info');
+                } else {
+                    alert('You already have an active premium subscription!');
+                }
+                
+                return;
+            }
+            
+            // Call original method
+            if (typeof originalShowModal === 'function') {
+                originalShowModal.apply(this, arguments);
             } else {
-                console.error('Modal not found');
+                // Fallback if original method not available
+                const modal = document.getElementById('subscriptionModal');
+                if (modal) {
+                    modal.style.display = 'block';
+                }
             }
         };
         
-        document.body.appendChild(testButton);
-        console.log('Test button added to page');
-    });
-    
-    // Force re-initialize the subscription manager after everything else is loaded
-    window.addEventListener('load', function() {
-        setTimeout(function() {
-            if (window.initSubscriptionManager && typeof window.initSubscriptionManager === 'function') {
-                console.log('Manually re-initializing subscription manager');
-                window.initSubscriptionManager();
-                
-                // Force setup event listeners if possible
-                if (window.SubscriptionManager && typeof window.SubscriptionManager.setupEventListeners === 'function') {
-                    console.log('Manually calling setupEventListeners');
-                    window.SubscriptionManager.setupEventListeners();
-                }
+        console.log('Manual premium modal fix applied');
+    }
+
+    // Start waiting after a small initial delay
+    setTimeout(waitForSubscriptionManager, 500);
+    </script>
+
+    <!-- Add this debugging script just before the closing </body> tag -->
+    <script>
+        // Debug the subscription modal loading
+        console.log('Debug script for subscription modal loaded');
+        
+        // Function to directly test the subscription button
+        function testSubscriptionButton() {
+            const activateButton = document.getElementById('activate-subscription');
+            if (!activateButton) {
+                console.error('Button not found in test function');
+                return;
             }
-        }, 2000);
-    });
-</script>
+            
+            console.log('Adding direct test event listener to activate button');
+            activateButton.addEventListener('click', function(e) {
+                console.log('DIRECT TEST: Activate button clicked!', e);
+                // Stop event propagation to prevent conflict with other handlers
+                e.stopPropagation();
+                
+                if (window.SubscriptionManager && typeof window.SubscriptionManager.verifySubscriptionCode === 'function') {
+                    console.log('Calling SubscriptionManager.verifySubscriptionCode directly');
+                    window.SubscriptionManager.verifySubscriptionCode();
+                } else {
+                    console.error('SubscriptionManager is not properly initialized');
+                    alert('Error: SubscriptionManager not properly initialized');
+                }
+            });
+        }
+        
+        // Check if modal elements exist after page load
+        window.addEventListener('load', function() {
+            console.log('Window loaded - checking subscription modal elements');
+            
+            // Check modal container
+            const modalContainer = document.getElementById('subscription-modal-container');
+            console.log('Modal container exists:', !!modalContainer);
+            
+            // Check main elements
+            const subscriptionModal = document.getElementById('subscriptionModal');
+            const activateButton = document.getElementById('activate-subscription');
+            const subscriptionCodeInput = document.getElementById('subscription-code');
+            const errorElement = document.getElementById('subscription-code-error');
+            
+            console.log('Modal elements check:', {
+                subscriptionModal: !!subscriptionModal,
+                activateButton: !!activateButton,
+                subscriptionCodeInput: !!subscriptionCodeInput,
+                errorElement: !!errorElement
+            });
+            
+            // Check for SubscriptionManager
+            console.log('SubscriptionManager initialized:', !!window.SubscriptionManager);
+            
+            // Test FirebaseAuth
+            console.log('FirebaseAuth initialized:', !!window.firebaseAuth);
+            
+            // Add our direct button test after a short delay to ensure everything is loaded
+            setTimeout(testSubscriptionButton, 1500);
+            
+            // Create a test button to force show the modal
+            const testButton = document.createElement('button');
+            testButton.textContent = 'Test Subscription';
+            testButton.style.position = 'fixed';
+            testButton.style.bottom = '20px';
+            testButton.style.right = '20px';
+            testButton.style.zIndex = '9999';
+            testButton.style.padding = '10px 15px';
+            testButton.style.background = '#3498db';
+            testButton.style.color = 'white';
+            testButton.style.border = 'none';
+            testButton.style.borderRadius = '5px';
+            testButton.style.cursor = 'pointer';
+            testButton.style.fontWeight = 'bold';
+            
+            testButton.onclick = function() {
+                console.log('Test button clicked, showing subscription modal');
+                const modal = document.getElementById('subscriptionModal');
+                if (modal) {
+                    modal.style.display = 'block';
+                    console.log('Modal displayed via style.display = block');
+                } else {
+                    console.error('Modal not found');
+                }
+            };
+            
+            document.body.appendChild(testButton);
+            console.log('Test button added to page');
+        });
+        
+        // UPDATED: Improved re-initialization code
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                // First check if SubscriptionManager exists and is initialized
+                if (window.SubscriptionManager) {
+                    console.log('SubscriptionManager exists, checking if premium modal fix is applied');
+                    
+                    // Check if the premium check is already part of showSubscriptionModal
+                    const modalMethodStr = window.SubscriptionManager.showSubscriptionModal.toString();
+                    const hasPremiumCheck = modalMethodStr.includes('this.isPremium');
+                    
+                    // If premium check is not applied, re-apply it
+                    if (!hasPremiumCheck) {
+                        console.log('Premium check not found, re-applying fix');
+                        
+                        // Store original method
+                        const originalShowModal = window.SubscriptionManager.showSubscriptionModal;
+                        
+                        // Override the method with the fix
+                        window.SubscriptionManager.showSubscriptionModal = function() {
+                            console.log('Re-enhanced showSubscriptionModal called, isPremium:', this.isPremium);
+                            
+                            // First check if premium
+                            if (this.isPremium) {
+                                console.log('User has premium, not showing modal');
+                                
+                                // Show notification instead
+                                if (window.showToast) {
+                                    window.showToast('You already have an active premium subscription!', 'info');
+                                } else {
+                                    alert('You already have an active premium subscription!');
+                                }
+                                
+                                return;
+                            }
+                            
+                            // Call original method
+                            if (typeof originalShowModal === 'function') {
+                                originalShowModal.apply(this, arguments);
+                            } else {
+                                // Fallback if original method not available
+                                const modal = document.getElementById('subscriptionModal');
+                                if (modal) {
+                                    modal.style.display = 'block';
+                                }
+                            }
+                        };
+                        
+                        console.log('Premium modal fix re-applied');
+                    } else {
+                        console.log('Premium check already applied, no action needed');
+                    }
+                } else if (window.initSubscriptionManager && typeof window.initSubscriptionManager === 'function') {
+                    // If SubscriptionManager doesn't exist yet, initialize it
+                    console.log('SubscriptionManager not found, initializing');
+                    window.initSubscriptionManager();
+                    
+                    // Then wait and apply the premium check
+                    setTimeout(function() {
+                        if (window.SubscriptionManager) {
+                            // Store original method
+                            const originalShowModal = window.SubscriptionManager.showSubscriptionModal;
+                            
+                            // Override the method with the fix
+                            window.SubscriptionManager.showSubscriptionModal = function() {
+                                console.log('Post-init modal fix - showSubscriptionModal called, isPremium:', this.isPremium);
+                                
+                                // First check if premium
+                                if (this.isPremium) {
+                                    console.log('User has premium, not showing modal');
+                                    
+                                    // Show notification instead
+                                    if (window.showToast) {
+                                        window.showToast('You already have an active premium subscription!', 'info');
+                                    } else {
+                                        alert('You already have an active premium subscription!');
+                                    }
+                                    
+                                    return;
+                                }
+                                
+                                // Call original method
+                                if (typeof originalShowModal === 'function') {
+                                    originalShowModal.apply(this, arguments);
+                                } else {
+                                    // Fallback if original method not available
+                                    const modal = document.getElementById('subscriptionModal');
+                                    if (modal) modal.style.display = 'block';
+                                }
+                            };
+                            
+                            console.log('Initial premium modal fix applied');
+                        }
+                    }, 500);
+                }
+            }, 2000);
+        });
+    </script>
 </body>
 </html>
