@@ -203,7 +203,7 @@
         
         // Enhance modal show method
         window.SubscriptionManager.showSubscriptionModal = function() {
-            console.log('Enhanced showSubscriptionModal called');
+            console.log('Enhanced showSubscriptionModal called, isPremium:', this.isPremium);
             
             // First check if premium
             if (this.isPremium) {
