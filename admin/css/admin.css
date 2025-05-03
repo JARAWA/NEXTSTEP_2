@@ -1341,7 +1341,59 @@
 .feature-card, .stat-card, .user-info, .dashboard-card {
   transition: all 0.3s ease;
 }
+/* Fix for navigation active state */
 
+/* Ensure the active menu item has the right background */
+.admin-nav li.active a {
+  background-color: var(--admin-secondary);
+  color: white;
+  font-weight: 500;
+  border-left: 3px solid white;
+}
+
+/* Make dashboard icon white when active */
+.admin-nav li.active a i {
+  color: white;
+}
+
+/* Add this to ensure the active class is properly recognized */
+.admin-nav li.active {
+  background-color: transparent;
+}
+
+/* Additional styling for the dashboard link specifically */
+.admin-nav li:first-child a {
+  position: relative;
+}
+
+/* Fix for the white background in the navigation */
+.admin-sidebar {
+  width: var(--admin-sidebar-width);
+  background: linear-gradient(to bottom, var(--admin-primary), var(--admin-primary-dark));
+  color: white;
+  position: fixed;
+  height: 100vh;
+  overflow-y: auto;
+  transition: all 0.3s ease;
+  z-index: 1000;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Ensure text in navigation is visible */
+.admin-nav a {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* Make navigation icon colors consistent */
+.admin-nav a i {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* Specifically target the dashboard item */
+.admin-nav li:first-child.active a {
+  background-color: var(--admin-secondary);
+  color: white;
+}
 .feature-card:hover, .stat-card:hover, .user-info:hover, .dashboard-card:hover {
   transform: translateY(-5px);
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
