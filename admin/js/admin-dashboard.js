@@ -32,7 +32,8 @@ class AdminDashboard {
             totalUsers: 0,
             newSignups: 0,
             jeeStudents: 0,
-            neetStudents: 0
+            neetStudents: 0,
+            premiumUsers: 0
         };
         this.recentUsers = [];
         this.examDistributionData = [];
@@ -133,53 +134,62 @@ class AdminDashboard {
 
     // Load user statistics
     async loadUserStatistics() {
-        try {
-            // Get total users count
-            const usersSnapshot = await getDocs(collection(this.db, "users"));
-            this.stats.totalUsers = usersSnapshot.size;
-            
-            // Get new signups (last 7 days)
-            const oneWeekAgo = new Date();
-            oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-            
-            const newSignupsQuery = query(
-                collection(this.db, "users"),
-                where("createdAt", ">=", oneWeekAgo.toISOString())
-            );
-            
-            const newSignupsSnapshot = await getDocs(newSignupsQuery);
-            this.stats.newSignups = newSignupsSnapshot.size;
-            
-            // Get JEE students count
-            const jeeQuery = query(
-                collection(this.db, "users"),
-                where("examData.JeeMain", "!=", null)
-            );
-            
-            const jeeSnapshot = await getDocs(jeeQuery);
-            this.stats.jeeStudents = jeeSnapshot.size;
-            
-            // Get NEET students count
-            const neetQuery = query(
-                collection(this.db, "users"),
-                where("examData.Neet", "!=", null)
-            );
-            
-            const neetSnapshot = await getDocs(neetQuery);
-            this.stats.neetStudents = neetSnapshot.size;
-            
-            // Update UI
-            document.getElementById('total-users').textContent = this.stats.totalUsers;
-            document.getElementById('new-signups').textContent = this.stats.newSignups;
-            document.getElementById('jee-students').textContent = this.stats.jeeStudents;
-            document.getElementById('neet-students').textContent = this.stats.neetStudents;
-            
-        } catch (error) {
-            console.error('Error loading user statistics:', error);
-            this.showToast('Error loading statistics', 'error');
-        }
+    try {
+        // Get total users count
+        const usersSnapshot = await getDocs(collection(this.db, "users"));
+        this.stats.totalUsers = usersSnapshot.size;
+        
+        // Get new signups (last 7 days)
+        const oneWeekAgo = new Date();
+        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+        
+        const newSignupsQuery = query(
+            collection(this.db, "users"),
+            where("createdAt", ">=", oneWeekAgo.toISOString())
+        );
+        
+        const newSignupsSnapshot = await getDocs(newSignupsQuery);
+        this.stats.newSignups = newSignupsSnapshot.size;
+        
+        // Get JEE students count
+        const jeeQuery = query(
+            collection(this.db, "users"),
+            where("examData.JeeMain", "!=", null)
+        );
+        
+        const jeeSnapshot = await getDocs(jeeQuery);
+        this.stats.jeeStudents = jeeSnapshot.size;
+        
+        // Get NEET students count
+        const neetQuery = query(
+            collection(this.db, "users"),
+            where("examData.Neet", "!=", null)
+        );
+        
+        const neetSnapshot = await getDocs(neetQuery);
+        this.stats.neetStudents = neetSnapshot.size;
+        
+        // Get premium users count
+        const premiumQuery = query(
+            collection(this.db, "users"),
+            where("subscription.isActive", "==", true)
+        );
+        
+        const premiumSnapshot = await getDocs(premiumQuery);
+        this.stats.premiumUsers = premiumSnapshot.size;
+        
+        // Update UI
+        document.getElementById('total-users').textContent = this.stats.totalUsers;
+        document.getElementById('new-signups').textContent = this.stats.newSignups;
+        document.getElementById('jee-students').textContent = this.stats.jeeStudents;
+        document.getElementById('neet-students').textContent = this.stats.neetStudents;
+        document.getElementById('premium-users').textContent = this.stats.premiumUsers;
+        
+    } catch (error) {
+        console.error('Error loading user statistics:', error);
+        this.showToast('Error loading statistics', 'error');
     }
-
+}
     // Load recent users
     async loadRecentUsers() {
         try {
