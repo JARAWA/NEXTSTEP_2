@@ -251,6 +251,160 @@
     <script type="module" src="js/modal.js"></script>
     <script type="module" src="js/contact.js"></script>
     <script type="module" src="js/subscription-manager.js"></script>
+
+    <script>
+// Final solution for subscription modal
+(function() {
+    console.log('Premium subscription modal fix loading...');
+    
+    // This intercepts all attempts to show the modal
+    // by overriding the native style.display setter
+    function applyModalInterceptor() {
+        const modalElement = document.getElementById('subscriptionModal');
+        if (!modalElement) {
+            console.log('Modal element not found yet, waiting...');
+            setTimeout(applyModalInterceptor, 500);
+            return;
+        }
+        
+        console.log('Found modal element, applying interceptor');
+        
+        // Create a proxy to intercept any attempts to change the style.display property
+        const originalStyleDescriptor = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'style');
+        const originalDisplay = modalElement.style.display;
+        
+        // The interceptor function that checks if user has premium before showing modal
+        function checkPremiumBeforeShowingModal() {
+            if (window.SubscriptionManager && window.SubscriptionManager.isPremium) {
+                console.log('INTERCEPTOR: Premium user detected, preventing modal display');
+                if (window.showToast) {
+                    window.showToast('You already have an active premium subscription!', 'info');
+                } else {
+                    alert('You already have an active premium subscription!');
+                }
+                return false;
+            }
+            return true;
+        }
+        
+        // Store the original setProperty method
+        const originalSetProperty = CSSStyleDeclaration.prototype.setProperty;
+        
+        // Override the setProperty method to intercept display changes
+        CSSStyleDeclaration.prototype.setProperty = function(propertyName, value, priority) {
+            // If this is the subscription modal and trying to set display to 'block'
+            if (this === modalElement.style && propertyName === 'display' && value === 'block') {
+                // Check if user has premium
+                if (!checkPremiumBeforeShowingModal()) {
+                    // If premium, don't show modal
+                    return;
+                }
+            }
+            
+            // Otherwise, proceed with original method
+            return originalSetProperty.call(this, propertyName, value, priority);
+        };
+        
+        // Also override direct property setter for display
+        Object.defineProperty(modalElement.style, 'display', {
+            get: function() {
+                return originalDisplay;
+            },
+            set: function(value) {
+                if (value === 'block') {
+                    // Check if user has premium
+                    if (!checkPremiumBeforeShowingModal()) {
+                        // If premium, set to 'none' instead
+                        originalSetProperty.call(this, 'display', 'none', '');
+                        return;
+                    }
+                }
+                // Otherwise, set the value normally
+                originalSetProperty.call(this, 'display', value, '');
+            },
+            configurable: true
+        });
+        
+        console.log('Modal display interceptor applied successfully');
+    }
+    
+    // Also directly patch the SubscriptionManager object when it's available
+    function patchSubscriptionManager() {
+        if (window.SubscriptionManager) {
+            console.log('Patching SubscriptionManager methods directly');
+            
+            // Patch showSubscriptionModal method
+            const originalShowModal = window.SubscriptionManager.showSubscriptionModal;
+            window.SubscriptionManager.showSubscriptionModal = function() {
+                console.log('Direct patch: showSubscriptionModal called, isPremium:', this.isPremium);
+                
+                // Check if premium
+                if (this.isPremium) {
+                    console.log('Direct patch: User has premium, preventing modal');
+                    if (window.showToast) {
+                        window.showToast('You already have an active premium subscription!', 'info');
+                    } else {
+                        alert('You already have an active premium subscription!');
+                    }
+                    return;
+                }
+                
+                // Call original method
+                if (typeof originalShowModal === 'function') {
+                    originalShowModal.apply(this, arguments);
+                } else {
+                    // Fallback
+                    const modal = document.getElementById('subscriptionModal');
+                    if (modal) modal.style.display = 'block';
+                }
+            };
+            
+            console.log('SubscriptionManager methods patched successfully');
+        } else {
+            // If not available yet, wait and try again
+            console.log('Waiting for SubscriptionManager...');
+            setTimeout(patchSubscriptionManager, 100);
+        }
+    }
+    
+    // Start both fix methods
+    applyModalInterceptor();
+    patchSubscriptionManager();
+    
+    // Add one last global check on authentication change
+    // This ensures the fix works even if premium status changes after login
+    function setupAuthListener() {
+        if (window.firebaseAuth) {
+            window.firebaseAuth.onAuthStateChanged(function(user) {
+                console.log('Auth state changed, re-applying modal fix');
+                setTimeout(function() {
+                    patchSubscriptionManager();
+                }, 1000);
+            });
+        } else {
+            setTimeout(setupAuthListener, 500);
+        }
+    }
+    
+    setupAuthListener();
+    
+    // Also add a window-level event interceptor for click events on premium buttons
+    window.addEventListener('click', function(e) {
+        // Check if the clicked element has the data-requires-premium attribute
+        if (e.target.hasAttribute && e.target.hasAttribute('data-requires-premium')) {
+            console.log('Click on premium-requiring element detected');
+            // Check premium status
+            if (window.SubscriptionManager && window.SubscriptionManager.isPremium) {
+                console.log('User has premium, allowing click to proceed');
+            } else {
+                console.log('User does not have premium, modal may appear');
+            }
+        }
+    }, true);  // Use capture phase to run before other handlers
+    
+    console.log('Premium subscription modal fix fully loaded');
+})();
+</script>
     
     <!-- UPDATED: Improved script loading for subscription-fixer.js -->
     <script>
