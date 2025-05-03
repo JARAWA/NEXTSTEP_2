@@ -54,6 +54,8 @@ class SubscriptionManager {
                 this.currentUser = null;
                 this.isPremium = false;
             }
+            // Update UI after auth state changes
+            this.updatePremiumUI();
         });
     }
     
@@ -62,9 +64,12 @@ class SubscriptionManager {
      */
     setupEventListeners() {
         // Close modal when clicking the X
-        document.getElementById('close-subscription-modal')?.addEventListener('click', () => {
-            this.hideSubscriptionModal();
-        });
+        const closeButton = document.getElementById('close-subscription-modal');
+        if (closeButton) {
+            closeButton.addEventListener('click', () => {
+                this.hideSubscriptionModal();
+            });
+        }
         
         // Close modal when clicking outside
         window.addEventListener('click', (event) => {
@@ -75,16 +80,22 @@ class SubscriptionManager {
         });
         
         // Activate subscription button
-        document.getElementById('activate-subscription')?.addEventListener('click', () => {
-            this.verifySubscriptionCode();
-        });
+        const activateButton = document.getElementById('activate-subscription');
+        if (activateButton) {
+            activateButton.addEventListener('click', () => {
+                this.verifySubscriptionCode();
+            });
+        }
         
         // Listen for Enter key in subscription input
-        document.getElementById('subscription-code')?.addEventListener('keyup', (event) => {
-            if (event.key === 'Enter') {
-                this.verifySubscriptionCode();
-            }
-        });
+        const codeInput = document.getElementById('subscription-code');
+        if (codeInput) {
+            codeInput.addEventListener('keyup', (event) => {
+                if (event.key === 'Enter') {
+                    this.verifySubscriptionCode();
+                }
+            });
+        }
         
         // Update all premium-required buttons
         this.updatePremiumButtons();
@@ -141,7 +152,10 @@ class SubscriptionManager {
      * Check if the current user has premium access
      */
     async checkPremiumStatus() {
-        if (!this.currentUser) return false;
+        if (!this.currentUser) {
+            this.isPremium = false;
+            return false;
+        }
         
         try {
             // Get user document from Firestore
@@ -178,6 +192,7 @@ class SubscriptionManager {
             return this.isPremium;
         } catch (error) {
             console.error("Error checking premium status:", error);
+            this.isPremium = false;
             return false;
         }
     }
@@ -193,7 +208,7 @@ class SubscriptionManager {
         
         // Update premium badge in user dropdown if available
         if (typeof window.updatePremiumStatus === 'function') {
-            window.updatePremiumStatus();
+            window.updatePremiumStatus(this.isPremium);
         }
     }
     
@@ -233,14 +248,39 @@ class SubscriptionManager {
         const errorElement = document.getElementById('subscription-code-error');
         
         // Clear previous error
-        errorElement.textContent = '';
-        errorElement.classList.remove('show');
+        if (errorElement) {
+            errorElement.textContent = '';
+            errorElement.style.display = 'none';
+        }
         
+        // First check if user already has premium
+        if (this.isPremium) {
+            console.log('User already has active premium subscription');
+            
+            if (errorElement) {
+                errorElement.textContent = 'You already have an active premium subscription!';
+                errorElement.style.display = 'block';
+                errorElement.style.color = '#3498db'; // Blue for information
+            } else {
+                alert('You already have an active premium subscription!');
+            }
+            
+            // Close modal after delay
+            setTimeout(() => {
+                this.hideSubscriptionModal();
+            }, 2000);
+            
+            return;
+        }
+        
+        if (!codeInput) return;
         const code = codeInput.value.trim();
         
         if (!code) {
-            errorElement.textContent = 'Please enter a subscription code';
-            errorElement.classList.add('show');
+            if (errorElement) {
+                errorElement.textContent = 'Please enter a subscription code';
+                errorElement.style.display = 'block';
+            }
             return;
         }
         
@@ -248,8 +288,10 @@ class SubscriptionManager {
         const subscriptionInfo = this.subscriptionCodes[code];
         
         if (!subscriptionInfo || !subscriptionInfo.valid) {
-            errorElement.textContent = 'Invalid subscription code. Please try again.';
-            errorElement.classList.add('show');
+            if (errorElement) {
+                errorElement.textContent = 'Invalid subscription code. Please try again.';
+                errorElement.style.display = 'block';
+            }
             return;
         }
         
@@ -283,28 +325,49 @@ class SubscriptionManager {
                     window.location.reload();
                 }, 1500);
             } else {
-                errorElement.textContent = 'Error activating subscription. Please try again.';
-                errorElement.classList.add('show');
+                if (errorElement) {
+                    errorElement.textContent = 'Error activating subscription. Please try again.';
+                    errorElement.style.display = 'block';
+                }
             }
         } catch (error) {
             console.error("Error verifying subscription code:", error);
-            errorElement.textContent = 'Server error. Please try again later.';
-            errorElement.classList.add('show');
+            if (errorElement) {
+                errorElement.textContent = 'Server error. Please try again later.';
+                errorElement.style.display = 'block';
+            }
         }
     }
     
     /**
-     * Show subscription modal
+     * Show subscription modal - FIXED to properly check premium status first
      */
-    showSubscriptionModal() {
-        const modal = document.getElementById('subscriptionModal');
-        if (modal) {
-            modal.style.display = 'block';
-            
-            // Focus the input field
-            setTimeout(() => {
-                document.getElementById('subscription-code')?.focus();
-            }, 300);
+    async showSubscriptionModal() {
+        console.log('showSubscriptionModal called, checking premium status');
+        
+        // Always do a fresh check of premium status before showing modal
+        const isPremium = await this.checkPremiumStatus();
+        console.log('Fresh premium check result:', isPremium);
+        
+        // Only show modal if user is NOT premium
+        if (!isPremium) {
+            const modal = document.getElementById('subscriptionModal');
+            if (modal) {
+                modal.style.display = 'block';
+                
+                // Focus the input field
+                setTimeout(() => {
+                    const codeInput = document.getElementById('subscription-code');
+                    if (codeInput) codeInput.focus();
+                }, 300);
+            }
+        } else {
+            // User already has premium, show message instead
+            if (window.showToast) {
+                window.showToast('You already have an active premium subscription!', 'info');
+            } else {
+                alert('You already have an active premium subscription!');
+            }
         }
     }
     
