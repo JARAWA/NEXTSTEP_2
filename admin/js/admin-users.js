@@ -51,6 +51,7 @@ class AdminUserManagement {
             role: 'all',
             exam: 'all',
             status: 'all',
+            subscription: 'all',
             dateFrom: null,
             dateTo: null,
             searchTerm: ''
@@ -100,6 +101,11 @@ class AdminUserManagement {
         document.getElementById('status-filter')?.addEventListener('change', (e) => {
             this.filters.status = e.target.value;
         });
+
+        // Subscription filter
+        document.getElementById('subscription-filter')?.addEventListener('change', (e) => {
+            this.filters.subscription = e.target.value;
+        });
         
         // Date filters
         document.getElementById('date-from')?.addEventListener('change', (e) => {
@@ -144,6 +150,8 @@ class AdminUserManagement {
         document.getElementById('bulk-deactivate')?.addEventListener('click', () => this.bulkDeactivateUsers());
         document.getElementById('bulk-activate')?.addEventListener('click', () => this.bulkActivateUsers());
         document.getElementById('bulk-delete')?.addEventListener('click', () => this.confirmBulkDelete());
+        document.getElementById('bulk-activate-subscription')?.addEventListener('click', () => this.showBulkSubscriptionModal('activate'));
+        document.getElementById('bulk-deactivate-subscription')?.addEventListener('click', () => this.bulkDeactivateSubscriptions());
         
         // Add new user button
         document.getElementById('add-user-btn')?.addEventListener('click', () => this.showAddUserModal());
@@ -186,6 +194,20 @@ class AdminUserManagement {
                     rankField.style.display = e.target.checked ? 'block' : 'none';
                 }
             });
+        });
+
+        // Setup subscription status change handler in edit form
+        document.getElementById('edit-subscription-status')?.addEventListener('change', (e) => {
+            const hasSubscription = e.target.value !== 'none';
+            document.getElementById('subscription-details-container').style.display = 
+                hasSubscription ? 'block' : 'none';
+            
+            // Set default expiry date if activating new subscription
+            if (e.target.value === 'active') {
+                const defaultExpiry = new Date();
+                defaultExpiry.setDate(defaultExpiry.getDate() + 365); // 1 year
+                document.getElementById('edit-subscription-expiry').valueAsDate = defaultExpiry;
+            }
         });
     }
 
@@ -374,6 +396,28 @@ class AdminUserManagement {
             }
         }
         
+        // Apply subscription filter
+        if (this.filters.subscription !== 'all') {
+            this.filteredUsers = this.filteredUsers.filter(user => {
+                const now = new Date();
+                
+                switch(this.filters.subscription) {
+                    case 'premium':
+                        return user.subscription && 
+                               user.subscription.isActive && 
+                               new Date(user.subscription.expiryDate) > now;
+                    case 'expired':
+                        return user.subscription && 
+                               (!user.subscription.isActive || 
+                                new Date(user.subscription.expiryDate) <= now);
+                    case 'none':
+                        return !user.subscription;
+                    default:
+                        return true;
+                }
+            });
+        }
+        
         // Apply date filters
         if (this.filters.dateFrom) {
             this.filteredUsers = this.filteredUsers.filter(user => {
@@ -428,6 +472,23 @@ class AdminUserManagement {
                 if (user.examData.Neet) examLabels.push('NEET-UG');
             }
             
+            // Get subscription status
+            let subscriptionStatus = 'No Subscription';
+            let subscriptionClass = 'status-inactive';
+            
+            if (user.subscription) {
+                const expiryDate = new Date(user.subscription.expiryDate);
+                const now = new Date();
+                
+                if (user.subscription.isActive && expiryDate > now) {
+                    subscriptionStatus = `Premium (Expires: ${expiryDate.toLocaleDateString()})`;
+                    subscriptionClass = 'status-premium';
+                } else if (expiryDate <= now) {
+                    subscriptionStatus = 'Expired';
+                    subscriptionClass = 'status-expired';
+                }
+            }
+            
             const createdDate = user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A';
             
             const rowHtml = `
@@ -451,12 +512,20 @@ class AdminUserManagement {
                             ${user.isActive ? 'Active' : 'Inactive'}
                         </span>
                     </td>
+                    <td>
+                        <span class="status-badge ${subscriptionClass}">
+                            ${subscriptionStatus}
+                        </span>
+                    </td>
                     <td class="actions-cell">
                         <button class="action-btn view" title="View User" onclick="adminUserManager.viewUser('${user.id}')">
                             <i class="fas fa-eye"></i>
                         </button>
                         <button class="action-btn edit" title="Edit User" onclick="adminUserManager.editUser('${user.id}')">
                             <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="action-btn subscription" title="Manage Subscription" onclick="adminUserManager.manageSubscription('${user.id}')">
+                            <i class="fas fa-crown"></i>
                         </button>
                         <button class="action-btn delete" title="Delete User" onclick="adminUserManager.confirmDeleteUser('${user.id}')">
                             <i class="fas fa-trash"></i>
@@ -582,6 +651,7 @@ class AdminUserManagement {
             role: 'all',
             exam: 'all',
             status: 'all',
+            subscription: 'all',
             dateFrom: null,
             dateTo: null,
             searchTerm: ''
@@ -591,6 +661,7 @@ class AdminUserManagement {
         document.getElementById('role-filter').value = 'all';
         document.getElementById('exam-filter').value = 'all';
         document.getElementById('status-filter').value = 'all';
+        document.getElementById('subscription-filter').value = 'all';
         document.getElementById('date-from').value = '';
         document.getElementById('date-to').value = '';
         document.getElementById('user-search').value = '';
@@ -732,6 +803,24 @@ class AdminUserManagement {
                 }
             }
             
+            // Set subscription data if available
+            if (userData.subscription) {
+                document.getElementById('edit-subscription-status').value = 
+                    userData.subscription.isActive ? 'active' : 'inactive';
+                
+                const expiryDate = new Date(userData.subscription.expiryDate);
+                document.getElementById('edit-subscription-expiry').valueAsDate = expiryDate;
+                
+                document.getElementById('edit-subscription-code').value = 
+                    userData.subscription.code || '';
+                
+                // Show subscription details
+                document.getElementById('subscription-details-container').style.display = 'block';
+            } else {
+                document.getElementById('edit-subscription-status').value = 'none';
+                document.getElementById('subscription-details-container').style.display = 'none';
+            }
+            
             // Set admin notes
             document.getElementById('admin-notes').value = userData.adminNotes || '';
             
@@ -807,6 +896,43 @@ class AdminUserManagement {
                     rank: parseInt(document.getElementById('edit-neet-rank').value) || null,
                     verified: document.getElementById('verify-neet').checked
                 };
+            }
+            
+            // Get subscription data
+            const subscriptionStatus = document.getElementById('edit-subscription-status').value;
+
+            if (subscriptionStatus !== 'none') {
+                const isActive = subscriptionStatus === 'active';
+                const expiryDate = document.getElementById('edit-subscription-expiry').valueAsDate;
+                const code = document.getElementById('edit-subscription-code').value.trim();
+                
+                userData.subscription = {
+                    isActive: isActive,
+                    expiryDate: expiryDate.toISOString(),
+                    updatedAt: new Date().toISOString(),
+                    updatedBy: this.currentUser.uid
+                };
+                
+                if (code) {
+                    userData.subscription.code = code;
+                }
+                
+                // If this is a new active subscription, set activatedAt
+                if (isActive) {
+                    // Get current user data
+                    const userDoc = await getDoc(doc(this.db, "users", userId));
+                    const currentUserData = userDoc.data();
+                    
+                    if (!currentUserData.subscription || !currentUserData.subscription.activatedAt) {
+                        userData.subscription.activatedAt = new Date().toISOString();
+                    } else {
+                        // Keep original activation date
+                        userData.subscription.activatedAt = currentUserData.subscription.activatedAt;
+                    }
+                }
+            } else {
+                // Remove subscription if set to none
+                userData.subscription = null;
             }
             
             // Update user document in Firestore
@@ -1175,11 +1301,280 @@ class AdminUserManagement {
         }
     }
 
+    /**
+     * Show subscription management modal
+     */
+    async manageSubscription(userId) {
+        try {
+            // Get user data
+            const userDoc = await getDoc(doc(this.db, "users", userId));
+            
+            if (!userDoc.exists()) {
+                this.showToast('User not found', 'error');
+                return;
+            }
+            
+            const userData = userDoc.data();
+            
+            // Set user ID in form
+            document.getElementById('subscription-user-id').value = userId;
+            
+            // Set user details
+            document.getElementById('subscription-user-name').textContent = userData.name || 'User';
+            document.getElementById('subscription-user-email').textContent = userData.email || 'No email';
+            
+            // Set current subscription details if available
+            if (userData.subscription) {
+                document.getElementById('subscription-status').value = 
+                    userData.subscription.isActive ? 'active' : 'inactive';
+                
+                document.getElementById('subscription-code').value = 
+                    userData.subscription.code || '';
+                
+                // Calculate duration based on activatedAt and expiryDate
+                const activatedAt = new Date(userData.subscription.activatedAt || new Date());
+                const expiryDate = new Date(userData.subscription.expiryDate);
+                
+                // Set expiry date input
+                document.getElementById('subscription-expiry').valueAsDate = expiryDate;
+                
+                // Calculate and set duration
+                const durationDays = Math.round((expiryDate - activatedAt) / (1000 * 60 * 60 * 24));
+                
+                // Find closest duration option
+                const durationOptions = [7, 30, 90, 180, 365];
+                const closestDuration = durationOptions.reduce((prev, curr) => {
+                    return (Math.abs(curr - durationDays) < Math.abs(prev - durationDays) ? curr : prev);
+                });
+                
+                document.getElementById('subscription-duration').value = closestDuration;
+                
+                // Set notes
+                document.getElementById('subscription-notes').value = 
+                    userData.subscription.notes || '';
+            } else {
+                // Set default values for new subscription
+                document.getElementById('subscription-status').value = 'active';
+                document.getElementById('subscription-code').value = '';
+                
+                // Set default expiry date to 1 year from now
+                const defaultExpiry = new Date();
+                defaultExpiry.setDate(defaultExpiry.getDate() + 365);
+                document.getElementById('subscription-expiry').valueAsDate = defaultExpiry;
+                
+                document.getElementById('subscription-duration').value = 365;
+                document.getElementById('subscription-notes').value = '';
+            }
+            
+            // Show modal
+            this.showModal('subscriptionModal');
+            
+            // Setup form submission
+            const form = document.getElementById('subscription-form');
+            form.onsubmit = (e) => {
+                e.preventDefault();
+                this.saveSubscriptionChanges();
+            };
+            
+            // Setup duration change handler to update expiry date
+            document.getElementById('subscription-duration').addEventListener('change', (e) => {
+                const durationDays = parseInt(e.target.value);
+                const newExpiryDate = new Date();
+                newExpiryDate.setDate(newExpiryDate.getDate() + durationDays);
+                document.getElementById('subscription-expiry').valueAsDate = newExpiryDate;
+            });
+            
+        } catch (error) {
+            console.error('Error loading user subscription data:', error);
+            this.showToast('Error loading subscription data', 'error');
+        }
+    }
+
+    /**
+     * Save subscription changes
+     */
+    async saveSubscriptionChanges() {
+        try {
+            const userId = document.getElementById('subscription-user-id').value;
+            
+            if (!userId) {
+                this.showToast('User ID not found', 'error');
+                return;
+            }
+            
+            // Get form values
+            const isActive = document.getElementById('subscription-status').value === 'active';
+            const code = document.getElementById('subscription-code').value.trim();
+            const expiryDate = document.getElementById('subscription-expiry').valueAsDate;
+            const notes = document.getElementById('subscription-notes').value.trim();
+            
+            // Create subscription data
+            const subscriptionData = {
+                isActive: isActive,
+                expiryDate: expiryDate.toISOString(),
+                updatedAt: new Date().toISOString(),
+                updatedBy: this.currentUser.uid,
+                notes: notes
+            };
+            
+            // Add code if provided
+            if (code) {
+                subscriptionData.code = code;
+            }
+            
+            // If this is a new subscription or activation, set activatedAt
+            if (isActive) {
+                // Get current user data to check if this is a new activation
+                const userDoc = await getDoc(doc(this.db, "users", userId));
+                const userData = userDoc.data();
+                
+                if (!userData.subscription || !userData.subscription.isActive) {
+                    subscriptionData.activatedAt = new Date().toISOString();
+                } else if (userData.subscription && userData.subscription.activatedAt) {
+                    // Keep the original activation date if reactivating
+                    subscriptionData.activatedAt = userData.subscription.activatedAt;
+                }
+            }
+            
+            // Update user document in Firestore
+            await updateDoc(doc(this.db, "users", userId), {
+                subscription: subscriptionData
+            });
+            
+            this.showToast('Subscription updated successfully', 'success');
+            this.closeModal('subscriptionModal');
+            
+            // Reload users to reflect changes
+            this.loadUsers();
+            
+        } catch (error) {
+            console.error('Error saving subscription changes:', error);
+            this.showToast('Error saving subscription changes', 'error');
+        }
+    }
+
+    /**
+     * Show bulk subscription modal
+     */
+    showBulkSubscriptionModal(action) {
+        if (this.selectedUserIds.size === 0) return;
+        
+        // Set selected count
+        document.getElementById('bulk-selected-count').textContent = this.selectedUserIds.size;
+        
+        // Set default expiry date (1 year from now)
+        const defaultExpiry = new Date();
+        defaultExpiry.setDate(defaultExpiry.getDate() + 365);
+        document.getElementById('bulk-subscription-expiry').valueAsDate = defaultExpiry;
+        
+        // Setup duration change handler
+        document.getElementById('bulk-subscription-duration').addEventListener('change', (e) => {
+            const durationDays = parseInt(e.target.value);
+            const newExpiryDate = new Date();
+            newExpiryDate.setDate(newExpiryDate.getDate() + durationDays);
+            document.getElementById('bulk-subscription-expiry').valueAsDate = newExpiryDate;
+        });
+        
+        // Setup form submission
+        const form = document.getElementById('bulk-subscription-form');
+        form.onsubmit = (e) => {
+            e.preventDefault();
+            this.bulkActivateSubscriptions();
+        };
+        
+        this.showModal('bulkSubscriptionModal');
+    }
+
+    /**
+     * Bulk activate subscriptions
+     */
+    async bulkActivateSubscriptions() {
+        try {
+            // Get form values
+            const expiryDate = document.getElementById('bulk-subscription-expiry').valueAsDate;
+            const notes = document.getElementById('bulk-subscription-notes').value.trim();
+            
+            // Create subscription data
+            const subscriptionData = {
+                isActive: true,
+                activatedAt: new Date().toISOString(),
+                expiryDate: expiryDate.toISOString(),
+                updatedAt: new Date().toISOString(),
+                updatedBy: this.currentUser.uid,
+                notes: notes
+            };
+            
+            // Update all selected users
+            const updatePromises = Array.from(this.selectedUserIds).map(userId => 
+                updateDoc(doc(this.db, "users", userId), {
+                    subscription: subscriptionData
+                })
+            );
+            
+            await Promise.all(updatePromises);
+            
+            this.showToast(`Subscriptions activated for ${this.selectedUserIds.size} users`, 'success');
+            this.closeModal('bulkSubscriptionModal');
+            
+            // Reload users to reflect changes
+            this.loadUsers();
+            
+        } catch (error) {
+            console.error('Error bulk activating subscriptions:', error);
+            this.showToast('Error activating subscriptions', 'error');
+        }
+    }
+
+    /**
+     * Bulk deactivate subscriptions
+     */
+    async bulkDeactivateSubscriptions() {
+        try {
+            if (this.selectedUserIds.size === 0) return;
+            
+            // Set confirmation action
+            this.confirmationAction = async () => {
+                try {
+                    // Update all selected users
+                    const updatePromises = Array.from(this.selectedUserIds).map(userId => 
+                        updateDoc(doc(this.db, "users", userId), {
+                            'subscription.isActive': false,
+                            'subscription.updatedAt': new Date().toISOString(),
+                            'subscription.updatedBy': this.currentUser.uid
+                        })
+                    );
+                    
+                    await Promise.all(updatePromises);
+                    
+                    this.showToast(`Subscriptions deactivated for ${this.selectedUserIds.size} users`, 'success');
+                    this.closeModal('confirmationModal');
+                    
+                    // Reload users to reflect changes
+                    this.loadUsers();
+                    
+                } catch (error) {
+                    console.error('Error bulk deactivating subscriptions:', error);
+                    this.showToast('Error deactivating subscriptions', 'error');
+                }
+            };
+            
+            // Show confirmation dialog
+            document.getElementById('confirmation-message').textContent = 
+                `Are you sure you want to deactivate premium subscriptions for ${this.selectedUserIds.size} users?`;
+            
+            this.showModal('confirmationModal');
+            
+        } catch (error) {
+            console.error('Error preparing bulk deactivation:', error);
+            this.showToast('Error preparing deactivation', 'error');
+        }
+    }
+
     // Export users
     exportUsers() {
         try {
             // Create CSV content
-            let csv = 'Name,Email,Mobile,Role,Status,Registration Date,Exams\n';
+            let csv = 'Name,Email,Mobile,Role,Status,Registration Date,Exams,Subscription Status\n';
             
             this.users.forEach(user => {
                 const exams = [];
@@ -1190,9 +1585,24 @@ class AdminUserManagement {
                     if (user.examData.Neet) exams.push(`NEET-UG (${user.examData.Neet.rank})`);
                 }
                 
+                // Get subscription status
+                let subscriptionStatus = 'None';
+                if (user.subscription) {
+                    const expiryDate = new Date(user.subscription.expiryDate);
+                    const now = new Date();
+                    
+                    if (user.subscription.isActive && expiryDate > now) {
+                        subscriptionStatus = `Premium (Expires: ${expiryDate.toLocaleDateString()})`;
+                    } else if (expiryDate <= now) {
+                        subscriptionStatus = 'Expired';
+                    } else {
+                        subscriptionStatus = 'Inactive';
+                    }
+                }
+                
                 const createdDate = user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A';
                 
-                csv += `"${user.name || ''}","${user.email || ''}","${user.mobileNumber || ''}","${user.userRole || 'student'}","${user.isActive ? 'Active' : 'Inactive'}","${createdDate}","${exams.join('; ')}"\n`;
+                csv += `"${user.name || ''}","${user.email || ''}","${user.mobileNumber || ''}","${user.userRole || 'student'}","${user.isActive ? 'Active' : 'Inactive'}","${createdDate}","${exams.join('; ')}","${subscriptionStatus}"\n`;
             });
             
             // Create download link
