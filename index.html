@@ -251,7 +251,22 @@
     <script type="module" src="js/modal.js"></script>
     <script type="module" src="js/contact.js"></script>
     <script type="module" src="js/subscription-manager.js"></script>
-    <script src="js/subscription-fixer.js"></script>
+    <script>
+  // Wait for SubscriptionManager to be fully initialized before loading fixer
+  function waitForSubscriptionManager() {
+    if (window.SubscriptionManager && window.SubscriptionManager.isPremium !== undefined) {
+      // Now load the fixer script
+      const script = document.createElement('script');
+      script.src = 'js/subscription-fixer.js';
+      document.body.appendChild(script);
+    } else {
+      setTimeout(waitForSubscriptionManager, 100);
+    }
+  }
+  
+  // Start waiting after a small initial delay
+  setTimeout(waitForSubscriptionManager, 500);
+</script>
 
 <!-- Add this debugging script just before the closing </body> tag -->
 <script>
