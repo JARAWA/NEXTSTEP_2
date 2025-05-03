@@ -421,12 +421,3 @@ export default subscriptionManager || new SubscriptionManager();
 
 // Make initialization function available globally
 window.initSubscriptionManager = initSubscriptionManager;
-
-// Auto-initialize if document is already loaded
-if (document.readyState === 'complete' || document.readyState === 'interactive') {
-    setTimeout(initSubscriptionManager, 1000);
-} else {
-    document.addEventListener('DOMContentLoaded', function() {
-        setTimeout(initSubscriptionManager, 1000);
-    });
-}
