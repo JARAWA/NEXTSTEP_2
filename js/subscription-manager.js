@@ -38,7 +38,14 @@ class SubscriptionManager {
      */
     init() {
         this.setupAuthListener();
-        this.setupEventListeners();
+        
+        // Wait for DOM to be ready before setting up event listeners
+        if (document.readyState === 'complete' || document.readyState === 'interactive') {
+            setTimeout(() => this.setupEventListeners(), 100);
+        } else {
+            document.addEventListener('DOMContentLoaded', () => this.setupEventListeners());
+        }
+        
         console.log('Subscription Manager initialized');
     }
     
@@ -63,12 +70,24 @@ class SubscriptionManager {
      * Set up event listeners for subscription modal
      */
     setupEventListeners() {
+        console.log('Setting up subscription event listeners');
+        
+        // Ensure modal exists before setting up events
+        const modal = document.getElementById('subscriptionModal');
+        if (!modal) {
+            console.warn('Subscription modal not found in DOM yet, will retry in 500ms');
+            setTimeout(() => this.setupEventListeners(), 500);
+            return;
+        }
+        
         // Close modal when clicking the X
         const closeButton = document.getElementById('close-subscription-modal');
         if (closeButton) {
             closeButton.addEventListener('click', () => {
                 this.hideSubscriptionModal();
             });
+        } else {
+            console.warn('Close subscription modal button not found');
         }
         
         // Close modal when clicking outside
@@ -85,6 +104,8 @@ class SubscriptionManager {
             activateButton.addEventListener('click', () => {
                 this.verifySubscriptionCode();
             });
+        } else {
+            console.warn('Activate subscription button not found');
         }
         
         // Listen for Enter key in subscription input
@@ -95,24 +116,34 @@ class SubscriptionManager {
                     this.verifySubscriptionCode();
                 }
             });
+        } else {
+            console.warn('Subscription code input not found');
         }
         
         // Update all premium-required buttons
         this.updatePremiumButtons();
+        
+        console.log('Subscription event listeners setup complete');
     }
     
     /**
      * Update all buttons requiring premium access
      */
     updatePremiumButtons() {
+        console.log('Updating premium buttons, isPremium:', this.isPremium);
+        
         // Find all buttons that require premium access
         document.querySelectorAll('[data-requires-premium="true"]').forEach(button => {
+            // Update button styling
+            button.classList.toggle('premium-active', this.isPremium);
+            
             // Store the original click event if any
             const originalOnClick = button.onclick;
             
             // Replace with our premium check
             button.onclick = (event) => {
                 event.preventDefault();
+                console.log('Premium button clicked, current premium status:', this.isPremium);
                 
                 // First check if user is logged in
                 if (!this.currentUser) {
@@ -124,26 +155,30 @@ class SubscriptionManager {
                     return;
                 }
                 
-                // Then check premium status
-                if (this.isPremium) {
-                    // If premium, proceed with original action
-                    if (originalOnClick) {
-                        originalOnClick.call(button, event);
-                    }
+                // Then do a fresh check of premium status before proceeding
+                this.checkPremiumStatus().then(isPremium => {
+                    console.log('Fresh premium check in button handler:', isPremium);
                     
-                    // Handle href navigation if present
-                    const targetUrl = button.getAttribute('href') || button.dataset.href;
-                    if (targetUrl) {
-                        if (button.getAttribute('target') === '_blank') {
-                            window.open(targetUrl, '_blank');
-                        } else {
-                            window.location.href = targetUrl;
+                    if (isPremium) {
+                        // If premium, proceed with original action
+                        if (originalOnClick) {
+                            originalOnClick.call(button, event);
                         }
+                        
+                        // Handle href navigation if present
+                        const targetUrl = button.getAttribute('href') || button.dataset.href;
+                        if (targetUrl) {
+                            if (button.getAttribute('target') === '_blank') {
+                                window.open(targetUrl, '_blank');
+                            } else {
+                                window.location.href = targetUrl;
+                            }
+                        }
+                    } else {
+                        // If not premium, show subscription modal
+                        this.showSubscriptionModal();
                     }
-                } else {
-                    // If not premium, show subscription modal
-                    this.showSubscriptionModal();
-                }
+                });
             };
         });
     }
@@ -360,6 +395,8 @@ class SubscriptionManager {
                     const codeInput = document.getElementById('subscription-code');
                     if (codeInput) codeInput.focus();
                 }, 300);
+            } else {
+                console.error('Subscription modal not found in DOM');
             }
         } else {
             // User already has premium, show message instead
@@ -378,6 +415,8 @@ class SubscriptionManager {
         const modal = document.getElementById('subscriptionModal');
         if (modal) {
             modal.style.display = 'none';
+        } else {
+            console.warn('Cannot hide subscription modal - element not found');
         }
     }
     
@@ -386,8 +425,11 @@ class SubscriptionManager {
      * @param {Function} callback - Function to execute if premium access is confirmed
      * @returns {boolean} Whether the user has premium access
      */
-    checkPremiumAccess(callback) {
-        if (this.isPremium) {
+    async checkPremiumAccess(callback) {
+        // Always do a fresh check
+        const isPremium = await this.checkPremiumStatus();
+        
+        if (isPremium) {
             if (typeof callback === 'function') {
                 callback();
             }
