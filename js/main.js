@@ -10,27 +10,7 @@ document.addEventListener('DOMContentLoaded', function() {
         loadComponent('footer-container', 'components/footer.html'),
         loadComponent('modal-container', 'components/modal.html')
     ]).then(() => {
-        // Add subscription modal to the document
-        loadComponent('subscription-modal-container', 'components/subscription-modal.html')
-            .then(() => {
-                // Initialize subscription manager after loading the modal
-                if (typeof window.initSubscriptionManager === 'function') {
-                    window.initSubscriptionManager();
-                } else {
-                    console.log('Subscription manager initialization function not found');
-                    
-                    // Load the subscription manager script dynamically
-                    const script = document.createElement('script');
-                    script.type = 'module';
-                    script.src = 'js/subscription-manager.js';
-                    document.head.appendChild(script);
-                }
-            })
-            .catch(err => {
-                console.error('Error loading subscription modal:', err);
-            });
-            
-        // Ensure Modal and Auth are properly initialized
+        // Ensure Modal and Auth are properly initialized first
         console.log('Initializing Modal and Auth');
         
         if (typeof Modal.init === 'function') {
@@ -59,8 +39,40 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (document.getElementById('user-info')) {
                     // We don't need to initialize dropdown here - Auth will handle it
                     console.log('Auth initialized successfully');
-                    // Update premium status
-                    updatePremiumStatus();
+                    
+                    // Now that auth is initialized, load subscription modal
+                    loadComponent('subscription-modal-container', 'components/subscription-modal.html')
+                        .then(() => {
+                            console.log('Subscription modal loaded successfully');
+                            
+                            // Initialize subscription manager after loading the modal and auth is ready
+                            if (typeof window.initSubscriptionManager === 'function') {
+                                console.log('Initializing subscription manager after auth and modal ready');
+                                window.initSubscriptionManager();
+                            } else {
+                                console.log('Subscription manager initialization function not found, loading dynamically');
+                                
+                                // Load the subscription manager script dynamically
+                                const script = document.createElement('script');
+                                script.type = 'module';
+                                script.src = 'js/subscription-manager.js';
+                                document.head.appendChild(script);
+                                
+                                // Wait for script to load and initialize
+                                script.onload = function() {
+                                    if (typeof window.initSubscriptionManager === 'function') {
+                                        console.log('Dynamically loaded subscription manager initialized');
+                                        window.initSubscriptionManager();
+                                    }
+                                };
+                            }
+                            
+                            // Update premium status after all initialization
+                            setTimeout(updatePremiumStatus, 500);
+                        })
+                        .catch(err => {
+                            console.error('Error loading subscription modal:', err);
+                        });
                 } else {
                     console.error('User info container still not found after loading components');
                 }
@@ -73,8 +85,14 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     // Add premium UI indicator to the user dropdown
-    function updatePremiumStatus() {
-        if (Auth && Auth.isLoggedIn && Auth.isPremium) {
+    function updatePremiumStatus(forcePremium) {
+        const isPremium = forcePremium !== undefined ? 
+            forcePremium : 
+            (Auth && Auth.isLoggedIn && Auth.isPremium);
+        
+        console.log('Updating premium UI status, isPremium:', isPremium);
+        
+        if (isPremium) {
             // Find user dropdown and add premium indicator
             const userDropdown = document.querySelector('.user-dropdown');
             if (userDropdown) {
@@ -102,11 +120,16 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Update premium status when the DOM is fully loaded
-    setTimeout(updatePremiumStatus, 1000);
-    
-    // Expose the function globally
-    window.updatePremiumStatus = updatePremiumStatus;
+    // Extend updatePremiumStatus to work with SubscriptionManager
+    window.updatePremiumStatus = function(isPremium) {
+        // If called directly from SubscriptionManager with a boolean
+        if (typeof isPremium === 'boolean') {
+            updatePremiumStatus(isPremium);
+        } else {
+            // Called without args - use Auth service
+            updatePremiumStatus();
+        }
+    };
 });
 
 // Function to initialize user dropdown using UserService - used for manual refresh
