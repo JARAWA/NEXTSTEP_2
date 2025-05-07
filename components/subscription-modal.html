@@ -42,3 +42,75 @@
         </div>
     </div>
 </div>
+
+<!-- Add immediate premium check -->
+<script>
+// Immediate check for premium status when modal is loaded
+(function() {
+    console.log('Subscription modal loaded - checking premium status');
+    
+    // Function to hide modal if user is premium
+    function checkAndHideForPremium() {
+        // Check if either Auth or SubscriptionManager indicates premium status
+        const isPremiumViaAuth = window.Auth && window.Auth.isPremium;
+        const isPremiumViaManager = window.SubscriptionManager && window.SubscriptionManager.isPremium;
+        
+        if (isPremiumViaAuth || isPremiumViaManager) {
+            console.log('Premium user detected, hiding subscription modal');
+            const modal = document.getElementById('subscriptionModal');
+            if (modal) {
+                modal.style.display = 'none';
+            }
+            return true;
+        }
+        return false;
+    }
+    
+    // Try immediately
+    if (!checkAndHideForPremium()) {
+        // If not successful, try again after waiting for SubscriptionManager
+        let attempts = 0;
+        const maxAttempts = 10;
+        
+        function attemptHideModal() {
+            attempts++;
+            console.log(`Premium check attempt ${attempts}/${maxAttempts}`);
+            
+            if (checkAndHideForPremium()) {
+                console.log('Successfully detected premium status and hidden modal');
+                return;
+            }
+            
+            if (attempts < maxAttempts) {
+                // Try again soon
+                setTimeout(attemptHideModal, 300);
+            }
+        }
+        
+        // Start checking
+        setTimeout(attemptHideModal, 100);
+    }
+    
+    // Set initial display to none until we confirm status
+    // This prevents the modal from flashing briefly
+    const modal = document.getElementById('subscriptionModal');
+    if (modal) {
+        // Store original display value
+        const originalDisplay = modal.style.display;
+        
+        // Hide initially
+        modal.style.display = 'none';
+        
+        // After a short delay, check if we should remain hidden
+        setTimeout(() => {
+            const isPremiumViaAuth = window.Auth && window.Auth.isPremium;
+            const isPremiumViaManager = window.SubscriptionManager && window.SubscriptionManager.isPremium;
+            
+            // Only restore original display if user is NOT premium
+            if (!isPremiumViaAuth && !isPremiumViaManager) {
+                modal.style.display = originalDisplay;
+            }
+        }, 500);
+    }
+})();
+</script>
