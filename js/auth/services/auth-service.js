@@ -299,6 +299,8 @@ class AuthService {
             redirectUrl.searchParams.append('premium', this.isPremium ? '1' : '0');
 
             // Store the token in sessionStorage for retrieval on the destination page
+            console.log("Storing token in sessionStorage, length:", token.length);
+            console.log("Token first 10 chars:", token.substring(0, 10) + "...");
             sessionStorage.setItem('josaa_auth_token', token);
             
             console.log('Redirecting to:', redirectUrl.toString().replace(token, 'TOKEN-REDACTED'));
