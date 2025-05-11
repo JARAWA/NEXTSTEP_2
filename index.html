@@ -15,6 +15,21 @@
     <link rel="stylesheet" href="css/contact.css">
     <!-- Add subscription CSS -->
     <link rel="stylesheet" href="css/subscription.css">
+    <!-- Hash Tracker for Debugging -->
+<script src="js/hash-tracker.js" defer></script>
+<!-- Add a small inline script to capture the initial state -->
+<script>
+(function captureInitialState() {
+    window._initialHash = window.location.hash;
+    window._initialUrl = window.location.href;
+    window._pageLoadTime = Date.now();
+    console.log('📍 Initial state captured:', { 
+        hash: window._initialHash,
+        url: window._initialUrl,
+        time: new Date(_pageLoadTime).toISOString()
+    });
+})();
+</script>
 </head>
 <body>
     <!-- Include Header -->
