@@ -294,7 +294,7 @@ class AuthService {
             // Build the redirect URL with authentication parameters
             const redirectUrl = new URL(targetUrl);
             redirectUrl.searchParams.append('token', token);
-            redirectUrl.searchParams.append('source', 'nextstep-nexn');
+            redirectUrl.searchParams.append('source', 'nextstepedu');
             redirectUrl.searchParams.append('uid', this.user.uid);
             redirectUrl.searchParams.append('premium', this.isPremium ? '1' : '0');
 
