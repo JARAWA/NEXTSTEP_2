@@ -276,44 +276,47 @@ class AuthService {
     }
     
     // Secure Redirect Handling
-    static async handleSecureRedirect(targetUrl) {
-        try {
-            if (!this.isLoggedIn || !this.user) {
-                throw new Error('User must be logged in');
-            }
+// In auth-service.js, modify the handleSecureRedirect method
+static async handleSecureRedirect(targetUrl) {
+    try {
+        if (!this.isLoggedIn || !this.user) {
+            throw new Error('User must be logged in');
+        }
 
-            // Get current token or refresh if needed
-            let token = TokenManager.getCurrentToken();
-            if (!TokenManager.validateToken(token)) {
-                token = await TokenManager.refreshToken(this.user);
-                if (!token) {
-                    throw new Error('Failed to generate valid authentication token');
-                }
-            }
-
-            // Build the redirect URL with authentication parameters
-            const redirectUrl = new URL(targetUrl);
-            redirectUrl.searchParams.append('token', token);
-            redirectUrl.searchParams.append('source', 'nextstepedu');
-            redirectUrl.searchParams.append('uid', this.user.uid);
-            redirectUrl.searchParams.append('premium', this.isPremium ? '1' : '0');
-
-            // Store the token in sessionStorage for retrieval on the destination page
-            console.log("Storing token in sessionStorage, length:", token.length);
-            console.log("Token first 10 chars:", token.substring(0, 10) + "...");
-            sessionStorage.setItem('josaa_auth_token', token);
-            
-            console.log('Redirecting to:', redirectUrl.toString().replace(token, 'TOKEN-REDACTED'));
-            
-            // Navigate to the target URL
-            window.location.href = redirectUrl.toString();
-        } catch (error) {
-            console.error('Redirect error:', error);
-            if (window.showToast) {
-                window.showToast('Error accessing application. Please try again.', 'error');
+        // Get current token or refresh if needed
+        let token = TokenManager.getCurrentToken();
+        if (!TokenManager.validateToken(token)) {
+            token = await TokenManager.refreshToken(this.user);
+            if (!token) {
+                throw new Error('Failed to generate valid authentication token');
             }
         }
+
+        // Create a destination URL without query parameters
+        const baseUrl = new URL(targetUrl);
+        
+        // Pack authentication data into a hash fragment
+        const authData = {
+            token: token,
+            source: 'nextstepedu',
+            uid: this.user.uid,
+            premium: this.isPremium ? '1' : '0'
+        };
+        
+        // Create URL with hash fragment
+        const redirectUrl = baseUrl.origin + baseUrl.pathname + '#' + btoa(JSON.stringify(authData));
+        
+        console.log('Redirecting to:', redirectUrl.replace(token, 'TOKEN-REDACTED'));
+        
+        // Navigate to the target URL
+        window.location.href = redirectUrl;
+    } catch (error) {
+        console.error('Redirect error:', error);
+        if (window.showToast) {
+            window.showToast('Error accessing application. Please try again.', 'error');
+        }
     }
+}
     
     // Button Setup with premium check
     static setupAuthButtons() {
