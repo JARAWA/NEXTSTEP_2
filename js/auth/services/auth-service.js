@@ -309,6 +309,7 @@ static async handleSecureRedirect(targetUrl) {
         console.log('Redirecting to:', redirectUrl.replace(token, 'TOKEN-REDACTED'));
         
         // Navigate to the target URL
+        console.log('🚀🚀🚀 INITIATING REDIRECT TO', redirectUrl.replace(token, 'TOKEN-REDACTED'));
         window.location.href = redirectUrl;
     } catch (error) {
         console.error('Redirect error:', error);
