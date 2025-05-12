@@ -321,6 +321,19 @@ static async handleSecureRedirect(targetUrl) {
     
     // Button Setup with premium check
     static setupAuthButtons() {
+            // Add ButtonHandlerCoordinator registration
+    if (window.ButtonHandlerCoordinator) {
+        window.ButtonHandlerCoordinator.registerHandler('auth', async (button, event) => {
+            if (!this.isLoggedIn) {
+                if (window.Modal && typeof window.Modal.show === 'function') {
+                    window.Modal.show();
+                }
+                return false;
+            }
+            return true;
+        });
+        console.log('Auth handler registered with ButtonHandlerCoordinator');
+    }
         const loginRequiredButtons = document.querySelectorAll('[data-requires-login="true"]');
         
         loginRequiredButtons.forEach(btn => {
