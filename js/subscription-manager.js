@@ -130,8 +130,26 @@ class SubscriptionManager {
      * Update all buttons requiring premium access
      */
     updatePremiumButtons() {
-        console.log('Updating premium buttons, isPremium:', this.isPremium);
-        
+    console.log('Updating premium buttons, isPremium:', this.isPremium);
+    
+    // Update button styling for all premium buttons regardless of coordinator
+    document.querySelectorAll('[data-requires-premium="true"]').forEach(button => {
+        button.classList.toggle('premium-active', this.isPremium);
+    });
+    
+    // Register with ButtonHandlerCoordinator if available
+    if (window.ButtonHandlerCoordinator) {
+        window.ButtonHandlerCoordinator.registerHandler('premium', async (button, event) => {
+            const isPremium = await this.checkPremiumStatus();
+            if (!isPremium) {
+                this.showSubscriptionModal();
+                return false;
+            }
+            return true;
+        });
+        console.log('Premium handler registered with ButtonHandlerCoordinator');
+        return; // Skip the original handler setup
+    }   
         // Find all buttons that require premium access
         document.querySelectorAll('[data-requires-premium="true"]').forEach(button => {
             // Update button styling
