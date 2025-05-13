@@ -19,6 +19,14 @@ class EnhancedSignupService {
     static newUser = null;
     
     /**
+     * Check if a multi-step signup is currently in progress
+     * @returns {boolean} Whether signup is in progress
+     */
+    static isSignupInProgress() {
+        return this.currentStep === 2 && this.newUser !== null;
+    }
+    
+    /**
      * Initialize enhanced signup functionality
      */
     static init() {
