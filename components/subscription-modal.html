@@ -1,6 +1,6 @@
 <!-- components/subscription-modal.html -->
 <!-- Premium Subscription Modal -->
-<div id="subscriptionModal" class="modal">
+<div id="subscriptionModal" class="modal" style="display: none;">
     <div class="modal-content subscription-modal">
         <div class="modal-header">
             <h2><i class="fas fa-crown"></i> Premium Access Required</h2>
@@ -43,64 +43,115 @@
     </div>
 </div>
 
-<!-- Add immediate premium check -->
+<!-- Diagnostic script to track modal behavior -->
 <script>
-// Immediate check for premium status when modal is loaded
 (function() {
-    console.log('Subscription modal loaded - checking premium status');
+    console.log('🔍 DEBUG: Subscription modal HTML loaded');
     
-    // Function to hide modal if user is premium
-    function checkAndHideForPremium() {
-        // Check if either Auth or SubscriptionManager indicates premium status
-        const isPremiumViaAuth = window.Auth && window.Auth.isPremium;
-        const isPremiumViaManager = window.SubscriptionManager && window.SubscriptionManager.isPremium;
-        
-        if (isPremiumViaAuth || isPremiumViaManager) {
-            console.log('Premium user detected, hiding subscription modal');
-            const modal = document.getElementById('subscriptionModal');
-            if (modal) {
-                modal.style.display = 'none';
-            }
-            return true;
-        }
-        return false;
-    }
-    
-    // Try immediately
-    if (!checkAndHideForPremium()) {
-        // If not successful, try again after waiting for SubscriptionManager
-        let attempts = 0;
-        const maxAttempts = 10;
-        
-        function attemptHideModal() {
-            attempts++;
-            console.log(`Premium check attempt ${attempts}/${maxAttempts}`);
-            
-            if (checkAndHideForPremium()) {
-                console.log('Successfully detected premium status and hidden modal');
-                return;
-            }
-            
-            if (attempts < maxAttempts) {
-                // Try again soon
-                setTimeout(attemptHideModal, 300);
-            }
-        }
-        
-        // Start checking
-        setTimeout(attemptHideModal, 100);
-    }
-    
-    // Set initial display to none until we confirm status
-    // This prevents the modal from flashing briefly
     const modal = document.getElementById('subscriptionModal');
     if (modal) {
-        // Store original display value
-        const originalDisplay = modal.style.display;
+        console.log('🔍 DEBUG: Modal initial display style:', modal.style.display);
         
-        // Hide initially
+        // Ensure modal is hidden by default
         modal.style.display = 'none';
+        console.log('🔍 DEBUG: Modal explicitly set to none');
         
+        // Monitor changes to the modal's display property
+        const modalObserver = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+                    console.log('🔍 DEBUG: Modal display changed to:', modal.style.display);
+                    console.trace('🔍 STACK TRACE for modal display change');
+                    
+                    // Important: Re-hide the modal if it's being shown automatically
+                    // and not through the proper subscription manager flow
+                    if (modal.style.display === 'block' && 
+                        !window._explicitlyShowingModal && 
+                        window.SubscriptionManager) {
+                        
+                        console.log('🔍 DEBUG: Detected unwanted modal display, re-hiding');
+                        setTimeout(() => {
+                            if (!window._explicitlyShowingModal) {
+                                modal.style.display = 'none';
+                            }
+                        }, 100);
+                    }
+                }
+            });
+        });
+        
+        modalObserver.observe(modal, { attributes: true });
+        console.log('🔍 DEBUG: Modal observer started');
+        
+        // Hide modal when clicking Close button
+        const closeButton = document.getElementById('close-subscription-modal');
+        if (closeButton) {
+            closeButton.addEventListener('click', () => {
+                console.log('🔍 DEBUG: Close button clicked');
+                modal.style.display = 'none';
+            });
+        }
+        
+        // Hide modal when clicking outside
+        window.addEventListener('click', (event) => {
+            if (event.target === modal) {
+                console.log('🔍 DEBUG: Clicked outside modal');
+                modal.style.display = 'none';
+            }
+        });
+    }
+    
+    // Patch the SubscriptionManager.showSubscriptionModal method to track explicit shows
+    if (window.SubscriptionManager) {
+        const originalShowModal = window.SubscriptionManager.showSubscriptionModal;
+        
+        window.SubscriptionManager.showSubscriptionModal = async function() {
+            console.log('🔍 DEBUG: showSubscriptionModal called');
+            console.trace('🔍 STACK TRACE for showSubscriptionModal call');
+            
+            window._explicitlyShowingModal = true;
+            
+            try {
+                // Call the original method
+                await originalShowModal.apply(this, arguments);
+            } finally {
+                // Clear the flag after a delay
+                setTimeout(() => {
+                    window._explicitlyShowingModal = false;
+                }, 200);
+            }
+        };
+        
+        console.log('🔍 DEBUG: Patched showSubscriptionModal method');
+    } else {
+        console.log('🔍 DEBUG: SubscriptionManager not available yet, will patch later');
+        
+        // Wait for SubscriptionManager to be available
+        const checkInterval = setInterval(() => {
+            if (window.SubscriptionManager) {
+                const originalShowModal = window.SubscriptionManager.showSubscriptionModal;
+                
+                window.SubscriptionManager.showSubscriptionModal = async function() {
+                    console.log('🔍 DEBUG: showSubscriptionModal called (delayed patch)');
+                    console.trace('🔍 STACK TRACE for showSubscriptionModal call');
+                    
+                    window._explicitlyShowingModal = true;
+                    
+                    try {
+                        // Call the original method
+                        await originalShowModal.apply(this, arguments);
+                    } finally {
+                        // Clear the flag after a delay
+                        setTimeout(() => {
+                            window._explicitlyShowingModal = false;
+                        }, 200);
+                    }
+                };
+                
+                console.log('🔍 DEBUG: Patched showSubscriptionModal method (delayed)');
+                clearInterval(checkInterval);
+            }
+        }, 500);
     }
 })();
 </script>
