@@ -468,9 +468,13 @@ static async handleSecureRedirect(targetUrl) {
 
             event.target.reset();
 
-            if (window.Modal && typeof window.Modal.hide === 'function') {
-                window.Modal.hide();
+           if (window.Modal && typeof window.Modal.hide === 'function') {
+            // Don't close modal if in the middle of enhanced signup
+            if (!window.EnhancedSignupService || 
+            !window.EnhancedSignupService.isSignupInProgress()) {
+            window.Modal.hide();
             }
+        }
 
         } catch (error) {
             const errorMessage = ErrorHandler.mapAuthError(error);
