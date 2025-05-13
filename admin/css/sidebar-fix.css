@@ -1,0 +1,45 @@
+/* Fix for the white sidebar background issue */
+.admin-sidebar {
+  /* Direct background color fix with !important to override any conflicts */
+  background: linear-gradient(to bottom, #2c3e50, #1a252f) !important;
+  background-color: #2c3e50 !important; /* Fallback solid color */
+  color: white !important;
+}
+
+/* Ensure the logo container has proper background */
+.admin-sidebar .logo-container {
+  background-color: rgba(0, 0, 0, 0.1) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Make all navigation links visible */
+.admin-sidebar .admin-nav a {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+/* Make navigation icons visible */
+.admin-sidebar .admin-nav a i {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+/* Make active navigation item stand out */
+.admin-sidebar .admin-nav li.active a {
+  background-color: rgba(52, 152, 219, 0.2) !important;
+  color: white !important;
+  border-left: 3px solid #3498db !important;
+}
+
+/* Ensure footer links are visible */
+.admin-sidebar-footer a,
+.admin-sidebar-footer button {
+  color: rgba(255, 255, 255, 0.7) !important;
+  background-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Fix hover states */
+.admin-sidebar .admin-nav a:hover,
+.admin-sidebar-footer a:hover,
+.admin-sidebar-footer button:hover {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  color: white !important;
+}
