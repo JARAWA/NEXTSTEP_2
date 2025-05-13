@@ -110,7 +110,11 @@ class AuthService {
                         await this.checkPremiumStatus(user);
                         
                         if (window.Modal && typeof window.Modal.hide === 'function') {
-                            window.Modal.hide();
+                        // Don't close modal if in the middle of enhanced signup
+                        if (!window.EnhancedSignupService || 
+                        !window.EnhancedSignupService.isSignupInProgress()) {
+                        window.Modal.hide();
+                        }
                         }
                         
                         if (window.showToast) {
