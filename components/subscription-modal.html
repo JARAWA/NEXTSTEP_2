@@ -101,16 +101,6 @@
         // Hide initially
         modal.style.display = 'none';
         
-        // After a short delay, check if we should remain hidden
-        setTimeout(() => {
-            const isPremiumViaAuth = window.Auth && window.Auth.isPremium;
-            const isPremiumViaManager = window.SubscriptionManager && window.SubscriptionManager.isPremium;
-            
-            // Only restore original display if user is NOT premium
-            if (!isPremiumViaAuth && !isPremiumViaManager) {
-                modal.style.display = originalDisplay;
-            }
-        }, 500);
     }
 })();
 </script>
