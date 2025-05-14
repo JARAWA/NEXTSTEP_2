@@ -156,6 +156,26 @@
         strong {
             color: var(--primary-color);
         }
+
+                .cta-button {
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            display: inline-block;
+            margin-top: 20px;
+            text-align: center;
+            text-decoration: none;
+        }
+        
+        .cta-button:hover {
+            background-color: var(--secondary-dark);
+        }
         
         footer {
             background-color: var(--light-bg);
@@ -207,7 +227,9 @@
     
     <!-- Header -->
     <header>
-        <img src="/api/placeholder/180/60" alt="NextStep Logo" class="logo">
+                 <div style="text-align: center; margin-top: 30px;">
+                    <a href="index.html" class="cta-button">NextStep</a>
+                </div>
     </header>
 
     <!-- Policy Content -->
