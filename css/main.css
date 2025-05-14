@@ -96,7 +96,16 @@ nav {
     align-items: center;
 }
 
+nav a i {
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 0.5em; /* Space between icon and text */
+}
+
 nav a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     color: var(--primary-color);
     text-decoration: none;
     padding: 0.8em 1.5em;
