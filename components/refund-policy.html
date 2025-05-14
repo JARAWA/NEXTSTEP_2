@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="NextStep Educational Services maintains a strict no-refund policy for all premium services. Please review our policy before making any purchases.">
+    <title>No Refund Policy | NextStep Guidance</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #006B6B;
+            --secondary-color: #00a1a1;
+            --accent-color: #ffc107;
+            --text-color: #333;
+            --light-text: #666;
+            --background-color: #fff;
+            --light-bg: #f9f9f9;
+            --border-color: #eee;
+            --warning-color: #dc3545;
+            --warning-bg: #fff8f8;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--background-color);
+        }
+        
+        .top-bar {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 10px 0;
+            text-align: center;
+        }
+        
+        .logo {
+            max-width: 180px;
+            height: auto;
+            margin: 15px 0;
+        }
+        
+        header {
+            text-align: center;
+            padding: 20px;
+            background-color: var(--light-bg);
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .policy-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        
+        .policy-header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .policy-header h1 {
+            color: var(--primary-color);
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+        }
+        
+        .last-updated {
+            color: var(--light-text);
+            font-style: italic;
+            font-size: 0.9rem;
+        }
+        
+        .print-button {
+            display: inline-block;
+            background-color: #eee;
+            color: #333;
+            padding: 10px 20px;
+            border-radius: 4px;
+            margin-bottom: 30px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .print-button:hover {
+            background-color: #ddd;
+            transform: translateY(-2px);
+            box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+        }
+        
+        .print-button i {
+            margin-right: 8px;
+        }
+        
+        .policy-content h2 {
+            color: var(--primary-color);
+            font-size: 1.8rem;
+            margin: 40px 0 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .policy-content h3 {
+            color: var(--secondary-color);
+            font-size: 1.4rem;
+            margin: 30px 0 15px;
+        }
+        
+        .policy-content p {
+            margin-bottom: 20px;
+            line-height: 1.7;
+        }
+        
+        .policy-content ul, .policy-content ol {
+            margin-bottom: 25px;
+            padding-left: 25px;
+        }
+        
+        .policy-content li {
+            margin-bottom: 12px;
+            line-height: 1.7;
+        }
+        
+        .policy-content a {
+            color: var(--primary-color);
+            text-decoration: none;
+            border-bottom: 1px dotted var(--primary-color);
+            transition: all 0.3s ease;
+        }
+        
+        .policy-content a:hover {
+            color: var(--secondary-color);
+            border-bottom: 1px solid var(--secondary-color);
+        }
+        
+        .contact-section {
+            background-color: var(--light-bg);
+            padding: 25px;
+            border-radius: 8px;
+            margin: 50px 0 30px;
+            border-left: 4px solid var(--primary-color);
+        }
+        
+        .warning-box {
+            background-color: var(--warning-bg);
+            padding: 20px;
+            border-radius: 8px;
+            margin: 30px 0;
+            border-left: 4px solid var(--warning-color);
+        }
+        
+        .warning-box h3 {
+            color: var(--warning-color);
+            margin-top: 0;
+        }
+        
+        .contact-section h3 {
+            margin-top: 0;
+            color: var(--primary-color);
+        }
+        
+        strong {
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+        
+        .highlight {
+            background-color: #fff2cc;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+        
+        footer {
+            background-color: var(--light-bg);
+            text-align: center;
+            padding: 20px;
+            margin-top: 30px;
+            border-top: 1px solid var(--border-color);
+            color: var(--light-text);
+            font-size: 0.9rem;
+        }
+        
+        @media print {
+            .top-bar, header, .print-button, footer {
+                display: none;
+            }
+            
+            .policy-container {
+                margin: 0;
+                max-width: 100%;
+                padding: 0;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .policy-container {
+                padding: 20px 15px;
+            }
+            
+            .policy-header h1 {
+                font-size: 1.8rem;
+            }
+            
+            .policy-content h2 {
+                font-size: 1.5rem;
+                margin: 30px 0 15px;
+            }
+            
+            .policy-content h3 {
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Top Bar -->
+    <div class="top-bar">
+        <p>NextStep Educational Services - Your Guide to Academic Success</p>
+    </div>
+    
+    <!-- Header -->
+    <header>
+        <img src="/api/placeholder/180/60" alt="NextStep Logo" class="logo">
+    </header>
+
+    <!-- Policy Content -->
+    <div class="policy-container">
+        <a href="javascript:window.print()" class="print-button">
+            <i class="fas fa-print"></i> Print this page
+        </a>
+        
+        <div class="policy-header">
+            <h1>No Refund Policy</h1>
+            <p class="last-updated">Last Updated: April 30, 2025</p>
+        </div>
+        
+        <div class="policy-content">
+            <div class="warning-box">
+                <h3>Important Notice</h3>
+                <p>All purchases made on NextStep Educational Services are final and non-refundable. Please read this policy carefully before completing any transaction.</p>
+            </div>
+            
+            <h2>Introduction</h2>
+            <p>This No Refund Policy outlines the terms and conditions regarding payments made to NextStep Educational Services ("we," "our," or "us") for premium services offered on our website (nextstepedu.co.in). We ask that you read this policy carefully before making any purchases.</p>
+            <p>By purchasing our premium services, you acknowledge that you have read, understood, and agree to be bound by this No Refund Policy.</p>
+
+            <h2>Premium Service Purchases</h2>
+            
+            <h3>Subscription Types</h3>
+            <p>We offer the following premium subscription options:</p>
+            <ul>
+                <li><strong>Premium Plan</strong>: One-time payment for 1-month access to premium features</li>
+                <li><strong>Redemption Code Access</strong>: Variable duration based on the specific code</li>
+            </ul>
+
+            <h3>Payment Processing</h3>
+            <p>All payments are processed securely through our payment partner, Razorpay. Payments are subject to the terms and conditions of Razorpay in addition to this policy.</p>
+
+            <h2>No Refund Policy</h2>
+            
+            <h3>Non-Refundable Purchases</h3>
+            <p>All payments made for premium services on NextStep Educational Services are <strong class="highlight">non-refundable</strong> under any circumstances, including but not limited to:</p>
+            <ol>
+                <li><strong>Dissatisfaction with Services</strong>: We encourage you to review our free features and demos before making a purchase decision. Once payment is made, no refunds will be issued if you are dissatisfied with our premium features.</li>
+                <li><strong>Change of Mind</strong>: We do not offer refunds if you change your mind about needing our services after purchase.</li>
+                <li><strong>Unused Services</strong>: No refunds will be provided for unused portions of your premium access period, regardless of usage level.</li>
+                <li><strong>Redemption Codes</strong>: Premium access acquired through redemption codes is strictly non-refundable.</li>
+                <li><strong>Account Termination</strong>: If your account is terminated for any reason, including violation of our Terms and Conditions, no refund will be provided.</li>
+            </ol>
+
+            <h3>Exceptions to No Refund Policy</h3>
+            <p>Despite our strict No Refund Policy, we may consider exceptions in the following extremely limited circumstances, at our sole discretion:</p>
+            <ol>
+                <li><strong>Fraudulent Charges</strong>: If unauthorized charges are made to your payment method, please contact your bank or payment provider immediately to dispute the charge, and notify us at <a href="mailto:nextstep.india1@gmail.com">nextstep.india1@gmail.com</a>.</li>
+                <li><strong>Duplicate Payments</strong>: If our system erroneously charges you multiple times for the same purchase, the duplicate charges may be refunded upon verification.</li>
+                <li><strong>Service Not Provided</strong>: If you have paid for a specific premium feature that is permanently unavailable due to technical issues on our platform (not related to your device, browser, or internet connection), we may consider a partial refund proportionate to the unavailable feature.</li>
+            </ol>
+
+            <h2>Cancellation Policy</h2>
+            
+            <h3>Subscription Cancellation</h3>
+            <ul>
+                <li>Premium access purchases are one-time payments for a fixed duration (1 year or 2 years) and do not automatically renew.</li>
+                <li>You may choose to discontinue using our premium services at any time, but no refunds will be issued for unused portions of your premium access period.</li>
+                <li>To formally cancel your premium access, please email us at <a href="mailto:nextstep.india1@gmail.com">nextstep.india1@gmail.com</a> with your registered email address and the subject line "Premium Access Cancellation."</li>
+            </ul>
+
+            <h3>Account Cancellation</h3>
+            <ul>
+                <li>You may request to cancel your NextStep account at any time by emailing <a href="mailto:nextstep.india1@gmail.com">nextstep.india1@gmail.com</a>.</li>
+                <li>Account cancellation will result in the termination of any associated premium access without any refund.</li>
+            </ul>
+
+            <h2>Technical Issues</h2>
+            <p>If you encounter technical issues that impact your ability to use our premium services:</p>
+            <ol>
+                <li>Contact our support team immediately at <a href="mailto:nextstep.india1@gmail.com">nextstep.india1@gmail.com</a> or via WhatsApp at <a href="tel:+919420444009">+91 9420444009</a>.</li>
+                <li>Provide detailed information about the issue, including screenshots and steps to reproduce the problem.</li>
+                <li>Our team will work diligently to resolve any technical issues as quickly as possible.</li>
+            </ol>
+            <p>However, technical issues do not qualify for refunds under our policy.</p>
+
+            <h2>Pre-Purchase Considerations</h2>
+            <p>Before making a purchase, we strongly encourage you to:</p>
+            <ol>
+                <li><strong>Try Our Free Features</strong>: Familiarize yourself with our platform using free features.</li>
+                <li><strong>Review Documentation</strong>: Read through our feature descriptions and documentation.</li>
+                <li><strong>Contact Support</strong>: If you have questions about specific features, contact our support team before purchase.</li>
+                <li><strong>Check Compatibility</strong>: Ensure our services are compatible with your devices and internet connection.</li>
+            </ol>
+
+            <h2>Chargebacks</h2>
+            <p>Initiating unauthorized chargebacks through your bank or payment provider is considered a violation of this policy and our Terms and Conditions. Unauthorized chargebacks may result in:</p>
+            <ol>
+                <li>Immediate termination of your account</li>
+                <li>Permanent loss of access to all services</li>
+                <li>Possible legal action to recover funds and associated fees</li>
+            </ol>
+            <p>We strongly encourage you to contact us directly to resolve any issues before initiating a chargeback.</p>
+
+            <h2>Payment Information</h2>
+            <p>For questions related to payments or receipts, please contact us at:</p>
+            <p><strong>Email:</strong> <a href="mailto:nextstep.india1@gmail.com">nextstep.india1@gmail.com</a><br>
+            <strong>WhatsApp:</strong> <a href="tel:+919420444009">+91 9420444009</a> (mention "Payment Query" at the beginning of your message)</p>
+            <p>Please include your transaction ID and registered email address in all payment-related communications.</p>
+
+            <h2>Policy Changes</h2>
+            <p>We reserve the right to modify this No Refund Policy at any time. Any changes will be effective immediately upon posting the updated policy on our website. We will notify registered users of significant changes via email.</p>
+
+            <div class="contact-section">
+                <h2>Contact Us</h2>
+                <p>If you have any questions about this No Refund Policy, please contact us at:</p>
+                <p><strong>NextStep Educational Services</strong><br>
+                Email: <a href="mailto:nextstep.india1@gmail.com">nextstep.india1@gmail.com</a><br>
+                WhatsApp Support: <a href="tel:+919420444009">+91 9420444009</a></p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Footer -->
+    <footer>
+        <p>&copy; 2025 NextStep Educational Services. All rights reserved.</p>
+    </footer>
+</body>
+</html>
