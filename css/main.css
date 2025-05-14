@@ -100,11 +100,13 @@ nav a i {
     display: inline-block;
     vertical-align: middle;
     margin-right: 0.3em; /* Space between icon and text */
+    flex-shrink: 0; /* Prevent icon from shrinking */
 }
 
 nav a {
     display: inline-flex;
     align-items: center;
+    white-space: nowrap; /* Prevent text wrapping */
     justify-content: center;
     color: var(--primary-color);
     text-decoration: none;
