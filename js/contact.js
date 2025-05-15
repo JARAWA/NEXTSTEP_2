@@ -1,7 +1,7 @@
-// Add this to your main.js file or create a new js/contact.js file
-
+// Add this to your js/contact.js file
 // Wait for DOM to be fully loaded
 document.addEventListener('DOMContentLoaded', function() {
+    // === WhatsApp Functionality ===
     // Get WhatsApp elements
     const whatsappButton = document.getElementById('whatsapp-button');
     const whatsappChatbox = document.getElementById('whatsapp-chatbox');
@@ -55,4 +55,35 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('a[href*="wa.me"]').forEach(link => {
         link.addEventListener('click', trackWhatsAppClick);
     });
+
+    // === Facebook Functionality ===
+    // Get the Facebook button element
+    const facebookButton = document.getElementById('facebook-button');
+    
+    // Add click event listener for Facebook button
+    if (facebookButton) {
+        facebookButton.addEventListener('click', function() {
+            // Open Facebook page in a new tab
+            window.open('https://www.facebook.com/profile.php?id=61575604599735', '_blank');
+        });
+        
+        // Make Facebook button visible after a delay (matching WhatsApp button behavior)
+        setTimeout(() => {
+            if (facebookButton) {
+                facebookButton.style.opacity = '1';
+            }
+        }, 2000);
+    }
+    
+    // Track Facebook clicks with analytics (if you have Firebase Analytics set up)
+    const trackFacebookClick = () => {
+        if (window.firebaseAnalytics) {
+            window.firebaseAnalytics.logEvent('facebook_page_click');
+        }
+    };
+    
+    // Add tracking to Facebook button
+    if (facebookButton) {
+        facebookButton.addEventListener('click', trackFacebookClick);
+    }
 });
