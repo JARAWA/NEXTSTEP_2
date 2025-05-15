@@ -175,6 +175,58 @@
         width: 50px;
         height: 50px;
     }
+
+    /* Base styles for floating social buttons */
+.social-floating-button {
+    position: fixed;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+    z-index: 999;
+}
+
+.social-floating-button:hover {
+    transform: scale(1.1);
+}
+
+/* Facebook button specific styles */
+.facebook-button {
+    background-color: #1877F2;
+    right: 30px;
+    bottom: 180px; /* Position above the WhatsApp button */
+    color: white;
+    font-size: 24px;
+}
+
+/* Update WhatsApp button to use common styles */
+.whatsapp-button {
+    position: fixed;
+    width: 60px;
+    height: 60px;
+    background-color: #25D366;
+    color: white;
+    border-radius: 50%;
+    right: 30px;
+    bottom: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    font-size: 24px;
+    z-index: 999;
+    transition: all 0.3s ease;
+}
+
+.whatsapp-button:hover {
+    transform: scale(1.1);
+}
     
     .whatsapp-button i {
         font-size: 24px;
