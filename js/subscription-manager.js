@@ -26,7 +26,7 @@ class SubscriptionManager {
             // Pre-defined subscription codes
             // Production version would store and verify these securely on the server
             "NEXTSTEP2025": { valid: true, duration: 365 }, // 1 year
-            "PREMIUM3MONTH": { valid: true, duration: 90 },  // 3 months
+            "PREMIUM2MONTH": { valid: true, duration: 60 },  // 2 months
             "TRYNEXTSTEP": { valid: true, duration: 7 }      // 1 week trial
         };
         
