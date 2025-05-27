@@ -892,7 +892,7 @@
             }
         };
 
-        // Load usage data with Firestore premium detection
+        // Load usage data with proper premium detection
         async function loadUsageData() {
             try {
                 let todayUsage = 0;
@@ -900,25 +900,49 @@
                 let weeklyUsage = 0;
                 let isPremium = false;
 
-                // Check premium status from multiple sources
-                if (window.Auth && window.Auth.isPremium) {
-                    isPremium = window.Auth.isPremium;
-                } else if (window.SubscriptionManager && window.SubscriptionManager.isPremium) {
-                    isPremium = window.SubscriptionManager.isPremium;
-                } else {
-                    // Try to get premium status from Firestore directly
-                    try {
-                        const userData = await fetchUserDataFromFirestore(profileUser);
-                        if (userData && userData.subscription) {
-                            const expiryDate = new Date(userData.subscription.expiryDate);
-                            isPremium = userData.subscription.isActive && expiryDate > new Date();
-                        }
-                    } catch (error) {
-                        console.log('Could not fetch premium status from Firestore:', error);
+                console.log('🔍 Starting premium status check...');
+
+                // Method 1: Check from actual Firestore user data (most reliable)
+                try {
+                    const userData = await fetchUserDataFromFirestore(profileUser);
+                    console.log('📊 User data for premium check:', {
+                        hasSubscription: !!(userData && userData.subscription),
+                        subscriptionData: userData?.subscription
+                    });
+                    
+                    if (userData && userData.subscription) {
+                        const subscription = userData.subscription;
+                        const now = new Date();
+                        const expiryDate = new Date(subscription.expiryDate);
+                        
+                        isPremium = subscription.isActive === true && expiryDate > now;
+                        
+                        console.log('💎 Firestore premium check:', {
+                            isActive: subscription.isActive,
+                            expiryDate: expiryDate.toLocaleDateString(),
+                            now: now.toLocaleDateString(),
+                            expiryInFuture: expiryDate > now,
+                            finalPremiumStatus: isPremium
+                        });
+                    } else {
+                        console.log('❌ No subscription data in Firestore');
+                        isPremium = false;
+                    }
+                } catch (firestoreError) {
+                    console.log('⚠️ Could not fetch premium status from Firestore:', firestoreError);
+                    isPremium = false;
+                    
+                    // Fallback: Check from Auth/SubscriptionManager (less reliable)
+                    if (window.Auth && typeof window.Auth.isPremium === 'boolean') {
+                        isPremium = window.Auth.isPremium;
+                        console.log('🔄 Fallback to Auth.isPremium:', isPremium);
+                    } else if (window.SubscriptionManager && typeof window.SubscriptionManager.isPremium === 'boolean') {
+                        isPremium = window.SubscriptionManager.isPremium;
+                        console.log('🔄 Fallback to SubscriptionManager.isPremium:', isPremium);
                     }
                 }
 
-                console.log('Premium status for usage calculation:', isPremium);
+                console.log('✅ Final premium status for usage calculation:', isPremium);
 
                 // Calculate usage from localStorage
                 if (profileUser) {
@@ -926,10 +950,28 @@
                     const storageKey = `josaa_usage_${profileUser.uid}_${today}`;
                     todayUsage = parseInt(localStorage.getItem(storageKey) || '0');
                     
+                    console.log('📈 Usage calculation:', {
+                        todayUsage,
+                        isPremium,
+                        storageKey: storageKey.substring(0, 30) + '...'
+                    });
+                    
                     // Calculate weekly usage
                     weeklyUsage = calculateWeeklyUsage();
                     
-                    remainingUses = isPremium ? Infinity : Math.max(0, 5 - todayUsage);
+                    // Calculate remaining uses
+                    if (isPremium) {
+                        remainingUses = Infinity;
+                    } else {
+                        remainingUses = Math.max(0, 5 - todayUsage);
+                    }
+                    
+                    console.log('🎯 Final usage numbers:', {
+                        todayUsage,
+                        weeklyUsage,
+                        remainingUses: remainingUses === Infinity ? '∞' : remainingUses,
+                        isPremium
+                    });
                 }
 
                 // Update display
@@ -961,7 +1003,14 @@
                 // Load usage history
                 loadUsageHistory();
             } catch (error) {
-                console.error('Error loading usage data:', error);
+                console.error('❌ Error loading usage data:', error);
+                
+                // Fallback to non-premium if there's an error
+                document.getElementById('today-usage').textContent = '0';
+                document.getElementById('remaining-uses').textContent = '5';
+                document.getElementById('weekly-usage').textContent = '0';
+                document.getElementById('usage-percentage').textContent = '0%';
+                document.getElementById('usage-progress').style.width = '0%';
             }
         }
 
