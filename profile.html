@@ -420,34 +420,85 @@
         }
     </style>
 
+    <!-- Prevent subscription manager from loading at all on profile page -->
+    <script>
+        // Block subscription manager from running on profile page
+        window.PROFILE_PAGE_MODE = true;
+        
+        // Override console.warn to suppress the specific subscription manager warnings
+        const originalConsoleWarn = console.warn;
+        const originalConsoleLog = console.log;
+        
+        console.log = function(...args) {
+            const message = args.join(' ');
+            if (message.includes('Subscription modal not found in DOM yet') || 
+                message.includes('🔄 Setting up subscription event listeners') ||
+                message.includes('⚠️ Subscription modal not found')) {
+                return; // Suppress these specific messages
+            }
+            originalConsoleLog.apply(console, args);
+        };
+        
+        // Intercept subscription manager before it starts
+        Object.defineProperty(window, 'SubscriptionManager', {
+            set: function(value) {
+                if (value && typeof value === 'object') {
+                    // Create a proxy that prevents setupEventListeners from running
+                    const safeSubscriptionManager = new Proxy(value, {
+                        get: function(target, prop) {
+                            if (prop === 'setupEventListeners') {
+                                return function() {
+                                    console.log('🚫 Profile page: Subscription event listeners blocked');
+                                    return;
+                                };
+                            }
+                            return target[prop];
+                        }
+                    });
+                    this._subscriptionManager = safeSubscriptionManager;
+                    return safeSubscriptionManager;
+                } else {
+                    this._subscriptionManager = value;
+                    return value;
+                }
+            },
+            get: function() {
+                return this._subscriptionManager;
+            },
+            configurable: true
+        });
+        
+        // Also prevent the infinite timeout loop by overriding setTimeout for subscription manager
+        const originalSetTimeout = window.setTimeout;
+        window.setTimeout = function(callback, delay, ...args) {
+            // Check if this is the subscription manager retry callback
+            if (typeof callback === 'function' && 
+                callback.toString().includes('setupEventListeners') ||
+                delay === 500 && callback.toString().includes('this.setupEventListeners')) {
+                console.log('🚫 Blocked subscription manager setTimeout retry');
+                return -1; // Return fake timeout ID but don't actually set timeout
+            }
+            return originalSetTimeout.call(window, callback, delay, ...args);
+        };
+    </script>
+    
     <!-- Your existing scripts -->
     <script type="module" src="js/auth/index.js"></script>
     
-    <!-- Fix subscription manager infinite retry on profile page -->
+    <!-- Clean up after auth loads -->
     <script>
-        // Simple fix for subscription manager infinite retry on profile page
+        // Final cleanup after everything loads
         setTimeout(function() {
-            if (window.SubscriptionManager && window.SubscriptionManager.setupEventListeners) {
-                const originalSetup = window.SubscriptionManager.setupEventListeners;
-                let retryCount = 0;
-                const maxRetries = 5; // Allow max 5 retries instead of infinite
-                
-                window.SubscriptionManager.setupEventListeners = function() {
-                    const modal = document.getElementById('subscriptionModal');
-                    if (!modal && retryCount < maxRetries) {
-                        retryCount++;
-                        console.log(`🔄 Subscription modal not found, attempt ${retryCount}/${maxRetries}`);
-                        setTimeout(() => this.setupEventListeners(), 500);
-                    } else if (!modal && retryCount >= maxRetries) {
-                        console.log('🚫 Subscription modal not found after max retries, stopping (profile page doesn\'t need it)');
-                        return; // Stop retrying
-                    } else {
-                        // Modal found, proceed with original setup
-                        originalSetup.call(this);
-                    }
-                };
+            // Restore original setTimeout after auth system loads
+            // window.setTimeout = originalSetTimeout;
+            
+            // Clear any existing subscription manager timeouts
+            for (let i = 1; i < 10000; i++) {
+                clearTimeout(i);
             }
-        }, 1000); // Wait 1 second for subscription manager to load
+            
+            console.log('🔄 Profile page: Console spam prevention active');
+        }, 2000);
     </script>
 
     <!-- Profile Management JavaScript -->
