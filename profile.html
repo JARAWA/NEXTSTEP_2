@@ -422,6 +422,33 @@
 
     <!-- Your existing scripts -->
     <script type="module" src="js/auth/index.js"></script>
+    
+    <!-- Fix subscription manager infinite retry on profile page -->
+    <script>
+        // Simple fix for subscription manager infinite retry on profile page
+        setTimeout(function() {
+            if (window.SubscriptionManager && window.SubscriptionManager.setupEventListeners) {
+                const originalSetup = window.SubscriptionManager.setupEventListeners;
+                let retryCount = 0;
+                const maxRetries = 5; // Allow max 5 retries instead of infinite
+                
+                window.SubscriptionManager.setupEventListeners = function() {
+                    const modal = document.getElementById('subscriptionModal');
+                    if (!modal && retryCount < maxRetries) {
+                        retryCount++;
+                        console.log(`🔄 Subscription modal not found, attempt ${retryCount}/${maxRetries}`);
+                        setTimeout(() => this.setupEventListeners(), 500);
+                    } else if (!modal && retryCount >= maxRetries) {
+                        console.log('🚫 Subscription modal not found after max retries, stopping (profile page doesn\'t need it)');
+                        return; // Stop retrying
+                    } else {
+                        // Modal found, proceed with original setup
+                        originalSetup.call(this);
+                    }
+                };
+            }
+        }, 1000); // Wait 1 second for subscription manager to load
+    </script>
 
     <!-- Profile Management JavaScript -->
     <script>
