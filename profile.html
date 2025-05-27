@@ -335,11 +335,21 @@
                 <!-- Account Information & Actions -->
                 <div>
                     <div class="stats-card">
-                        <h4 style="margin-bottom: 1rem;"><i class="fas fa-user-cog"></i> Account Info</h4>
+                        <h4 style="margin-bottom: 1rem;"><i class="fas fa-user-cog"></i> Account Information</h4>
+                        
+                        <div style="margin-bottom: 1rem;">
+                            <strong>Name:</strong>
+                            <p id="user-name-display" style="color: #666; margin: 0.25rem 0;">Loading...</p>
+                        </div>
                         
                         <div style="margin-bottom: 1rem;">
                             <strong>Email:</strong>
                             <p id="user-email-display" style="color: #666; font-size: 0.9rem; margin: 0.25rem 0;">Loading...</p>
+                        </div>
+                        
+                        <div style="margin-bottom: 1rem;">
+                            <strong>Mobile:</strong>
+                            <p id="user-mobile" style="color: #666; margin: 0.25rem 0;">Loading...</p>
                         </div>
                         
                         <div style="margin-bottom: 1rem;">
@@ -348,45 +358,35 @@
                         </div>
                         
                         <div style="margin-bottom: 1rem;">
-                            <strong>Daily Limit:</strong>
-                            <p id="daily-limit" style="margin: 0.25rem 0;">Loading...</p>
+                            <strong>Member Since:</strong>
+                            <p id="member-since" style="color: #666; font-size: 0.9rem; margin: 0.25rem 0;">Loading...</p>
                         </div>
                         
                         <div style="margin-bottom: 1rem;">
-                            <strong>Status:</strong>
-                            <p id="login-status" style="margin: 0.25rem 0; color: var(--success-color);"><i class="fas fa-check-circle"></i> Authenticated</p>
-                        </div>
-
-                        <div style="margin-bottom: 1rem;">
-                            <strong>Session:</strong>
-                            <p id="session-info" style="color: #666; font-size: 0.9rem; margin: 0.25rem 0;">Active</p>
+                            <strong>User Role:</strong>
+                            <p id="user-role" style="margin: 0.25rem 0;">Loading...</p>
                         </div>
                     </div>
 
-                    <!-- Quick Actions -->
+                    <!-- Exam Data -->
                     <div class="stats-card">
-                        <h4 style="margin-bottom: 1rem;"><i class="fas fa-tools"></i> Quick Actions</h4>
-                        
-                        <div style="display: grid; gap: 0.75rem;">
-                            <button class="btn btn-primary" onclick="refreshProfileData()">
-                                <i class="fas fa-sync-alt"></i> Refresh Data
-                            </button>
-                            
-                            <button class="btn btn-outline-secondary" onclick="clearLocalData()">
-                                <i class="fas fa-trash-alt"></i> Clear Local Data
-                            </button>
-                            
-                            <button class="btn btn-info" onclick="exportUsageData()">
-                                <i class="fas fa-download"></i> Export Usage Data
-                            </button>
-                            
-                            <a href="https://josaa.nextstepedu.co.in/" class="btn btn-success">
-                                <i class="fas fa-search"></i> JOSAA Generator
-                            </a>
-                            
-                            <a href="https://mhtcet.nextstepedu.co.in" class="btn btn-success">
-                                <i class="fas fa-search"></i> MHTCET Generator
-                            </a>
+                        <h4 style="margin-bottom: 1rem;"><i class="fas fa-graduation-cap"></i> Exam Ranks</h4>
+                        <div id="exam-data">
+                            <div style="text-align: center; color: #666; padding: 1rem;">
+                                <div style="width: 20px; height: 20px; border: 2px solid #f3f3f3; border-top: 2px solid var(--primary-color); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 0.5rem;"></div>
+                                Loading exam data...
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Subscription Details -->
+                    <div class="stats-card">
+                        <h4 style="margin-bottom: 1rem;"><i class="fas fa-crown"></i> Subscription Details</h4>
+                        <div id="subscription-details">
+                            <div style="text-align: center; color: #666; padding: 1rem;">
+                                <div style="width: 20px; height: 20px; border: 2px solid #f3f3f3; border-top: 2px solid var(--primary-color); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 0.5rem;"></div>
+                                Loading subscription...
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -577,7 +577,7 @@
             }
         }
 
-        // Load profile data
+        // Load profile data from Firestore
         async function loadProfileData() {
             console.log('Loading profile data, authReady:', authReady);
             
@@ -605,29 +605,220 @@
 
             profileUser = user;
             
-            // Update basic profile info
-            const displayName = user.displayName || user.email.split('@')[0];
+            try {
+                // Fetch user data from Firestore
+                const userData = await fetchUserDataFromFirestore(user);
+                
+                if (userData) {
+                    displayUserProfile(userData);
+                    displayExamData(userData.examData);
+                    displaySubscriptionData(userData.subscription);
+                } else {
+                    // Fallback to basic user info
+                    displayBasicUserInfo(user);
+                }
+                
+                // Load usage data
+                await loadUsageData();
+                
+            } catch (error) {
+                console.error('Error loading profile data:', error);
+                displayBasicUserInfo(user);
+                await loadUsageData();
+            }
+        }
+
+        // Fetch user data from Firestore
+        async function fetchUserDataFromFirestore(user) {
+            try {
+                const { getFirestore, doc, getDoc } = await import("https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js");
+                const db = getFirestore();
+                
+                console.log('Fetching user data from Firestore for:', user.uid);
+                const userDoc = await getDoc(doc(db, "users", user.uid));
+                
+                if (userDoc.exists()) {
+                    const userData = userDoc.data();
+                    console.log('User data fetched successfully:', userData);
+                    return userData;
+                } else {
+                    console.log('No user document found in Firestore');
+                    return null;
+                }
+            } catch (error) {
+                console.error('Error fetching from Firestore:', error);
+                return null;
+            }
+        }
+
+        // Display user profile information
+        function displayUserProfile(userData) {
+            // Basic profile info
+            const displayName = userData.name || userData.displayName || profileUser.email.split('@')[0];
             document.getElementById('user-name').textContent = displayName;
-            document.getElementById('user-email').textContent = user.email;
-            document.getElementById('user-email-display').textContent = user.email;
+            document.getElementById('user-name-display').textContent = userData.name || 'Not provided';
+            document.getElementById('user-email').textContent = userData.email || profileUser.email;
+            document.getElementById('user-email-display').textContent = userData.email || profileUser.email;
+            document.getElementById('user-mobile').textContent = userData.mobileNumber || 'Not provided';
+            document.getElementById('user-role').textContent = userData.userRole || 'student';
             
             // Set avatar initial
             const avatar = document.getElementById('profile-avatar');
             avatar.innerHTML = displayName.charAt(0).toUpperCase();
 
-            // Check account type - look for premium status from multiple sources
-            let isPremium = false;
-            if (window.Auth && typeof window.Auth.isPremium !== 'undefined') {
-                isPremium = window.Auth.isPremium;
-            } else if (window.SubscriptionManager && typeof window.SubscriptionManager.isPremium !== 'undefined') {
-                isPremium = window.SubscriptionManager.isPremium;
+            // Member since
+            if (userData.createdAt) {
+                const createdDate = new Date(userData.createdAt);
+                document.getElementById('member-since').textContent = createdDate.toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+            } else {
+                document.getElementById('member-since').textContent = 'Unknown';
             }
-            
-            console.log('Premium status detected:', isPremium);
-            setAccountType(isPremium);
 
-            // Load usage data
-            await loadUsageData();
+            // Check and display account type
+            const isPremium = userData.subscription && 
+                             userData.subscription.isActive && 
+                             new Date(userData.subscription.expiryDate) > new Date();
+            setAccountType(isPremium);
+        }
+
+        // Display basic user info as fallback
+        function displayBasicUserInfo(user) {
+            const displayName = user.displayName || user.email.split('@')[0];
+            document.getElementById('user-name').textContent = displayName;
+            document.getElementById('user-name-display').textContent = user.displayName || 'Not provided';
+            document.getElementById('user-email').textContent = user.email;
+            document.getElementById('user-email-display').textContent = user.email;
+            document.getElementById('user-mobile').textContent = 'Not available';
+            document.getElementById('user-role').textContent = 'student';
+            document.getElementById('member-since').textContent = 'Unknown';
+            
+            const avatar = document.getElementById('profile-avatar');
+            avatar.innerHTML = displayName.charAt(0).toUpperCase();
+            
+            setAccountType(false); // Default to non-premium
+        }
+
+        // Display exam data
+        function displayExamData(examData) {
+            const examContainer = document.getElementById('exam-data');
+            
+            if (!examData || Object.keys(examData).length === 0) {
+                examContainer.innerHTML = `
+                    <div style="text-align: center; color: #666; padding: 1rem;">
+                        <i class="fas fa-info-circle"></i> No exam data available
+                    </div>
+                `;
+                return;
+            }
+
+            let examHtml = '';
+            
+            // Map of exam types to display names
+            const examNames = {
+                'JeeMain': 'JEE Main',
+                'JeeAdvanced': 'JEE Advanced', 
+                'Mhtcet': 'MHT-CET',
+                'NeetUg': 'NEET-UG'
+            };
+
+            // Display each exam
+            Object.keys(examData).forEach(examType => {
+                const exam = examData[examType];
+                const displayName = examNames[examType] || examType;
+                
+                examHtml += `
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 0; border-bottom: 1px solid #f0f0f0;">
+                        <div>
+                            <strong>${displayName}</strong>
+                            ${exam.dateAdded ? `<br><small style="color: #666;">Added: ${new Date(exam.dateAdded).toLocaleDateString()}</small>` : ''}
+                        </div>
+                        <div style="text-align: right;">
+                            <span style="font-size: 1.2rem; font-weight: bold; color: var(--primary-color);">
+                                Rank: ${exam.rank}
+                            </span>
+                        </div>
+                    </div>
+                `;
+            });
+
+            examContainer.innerHTML = examHtml;
+        }
+
+        // Display subscription data
+        function displaySubscriptionData(subscriptionData) {
+            const subscriptionContainer = document.getElementById('subscription-details');
+            
+            if (!subscriptionData) {
+                subscriptionContainer.innerHTML = `
+                    <div style="text-align: center; color: #666; padding: 1rem;">
+                        <i class="fas fa-info-circle"></i> No active subscription
+                        <br><small>Standard account with daily limits</small>
+                    </div>
+                `;
+                return;
+            }
+
+            const now = new Date();
+            const expiryDate = new Date(subscriptionData.expiryDate);
+            const activatedDate = new Date(subscriptionData.activatedAt);
+            const isActive = subscriptionData.isActive && expiryDate > now;
+            const daysRemaining = Math.ceil((expiryDate - now) / (1000 * 60 * 60 * 24));
+
+            let statusColor = isActive ? 'var(--success-color)' : '#dc3545';
+            let statusIcon = isActive ? 'fas fa-check-circle' : 'fas fa-times-circle';
+            let statusText = isActive ? 'Active' : 'Expired';
+
+            subscriptionContainer.innerHTML = `
+                <div style="margin-bottom: 1rem;">
+                    <strong>Status:</strong>
+                    <p style="margin: 0.25rem 0; color: ${statusColor};">
+                        <i class="${statusIcon}"></i> ${statusText}
+                    </p>
+                </div>
+                
+                <div style="margin-bottom: 1rem;">
+                    <strong>Plan:</strong>
+                    <p style="margin: 0.25rem 0; color: #666;">
+                        Premium (${subscriptionData.duration} days)
+                    </p>
+                </div>
+                
+                <div style="margin-bottom: 1rem;">
+                    <strong>Activated:</strong>
+                    <p style="margin: 0.25rem 0; color: #666; font-size: 0.9rem;">
+                        ${activatedDate.toLocaleDateString('en-US', { 
+                            year: 'numeric', 
+                            month: 'long', 
+                            day: 'numeric' 
+                        })}
+                    </p>
+                </div>
+                
+                <div style="margin-bottom: 1rem;">
+                    <strong>Expires:</strong>
+                    <p style="margin: 0.25rem 0; color: ${isActive ? '#666' : '#dc3545'}; font-size: 0.9rem;">
+                        ${expiryDate.toLocaleDateString('en-US', { 
+                            year: 'numeric', 
+                            month: 'long', 
+                            day: 'numeric' 
+                        })}
+                        ${isActive ? `<br><small>(${daysRemaining} days remaining)</small>` : ''}
+                    </p>
+                </div>
+                
+                ${subscriptionData.code ? `
+                <div style="margin-bottom: 1rem;">
+                    <strong>Code Used:</strong>
+                    <p style="margin: 0.25rem 0; color: #666; font-size: 0.9rem; font-family: monospace;">
+                        ${subscriptionData.code}
+                    </p>
+                </div>
+                ` : ''}
+            `;
         }
 
         // Set account type display
@@ -647,14 +838,47 @@
             }
         }
 
-        // Load usage data
+        window.toggleDebugSection = function() {
+            const debugSection = document.getElementById('debug-section');
+            const isVisible = debugSection.style.display !== 'none';
+            
+            if (isVisible) {
+                debugSection.style.display = 'none';
+            } else {
+                debugSection.style.display = 'block';
+                updateDebugInfo();
+            }
+        };
+
+        // Load usage data with Firestore premium detection
         async function loadUsageData() {
             try {
                 let todayUsage = 0;
                 let remainingUses = 5;
                 let weeklyUsage = 0;
+                let isPremium = false;
 
-                // Try to get usage from localStorage (simplified for demo)
+                // Check premium status from multiple sources
+                if (window.Auth && window.Auth.isPremium) {
+                    isPremium = window.Auth.isPremium;
+                } else if (window.SubscriptionManager && window.SubscriptionManager.isPremium) {
+                    isPremium = window.SubscriptionManager.isPremium;
+                } else {
+                    // Try to get premium status from Firestore directly
+                    try {
+                        const userData = await fetchUserDataFromFirestore(profileUser);
+                        if (userData && userData.subscription) {
+                            const expiryDate = new Date(userData.subscription.expiryDate);
+                            isPremium = userData.subscription.isActive && expiryDate > new Date();
+                        }
+                    } catch (error) {
+                        console.log('Could not fetch premium status from Firestore:', error);
+                    }
+                }
+
+                console.log('Premium status for usage calculation:', isPremium);
+
+                // Calculate usage from localStorage
                 if (profileUser) {
                     const today = new Date().toISOString().split('T')[0];
                     const storageKey = `josaa_usage_${profileUser.uid}_${today}`;
@@ -663,15 +887,6 @@
                     // Calculate weekly usage
                     weeklyUsage = calculateWeeklyUsage();
                     
-                    // Check if premium from multiple sources
-                    let isPremium = false;
-                    if (window.Auth && window.Auth.isPremium) {
-                        isPremium = window.Auth.isPremium;
-                    } else if (window.SubscriptionManager && window.SubscriptionManager.isPremium) {
-                        isPremium = window.SubscriptionManager.isPremium;
-                    }
-                    
-                    console.log('Premium status for usage calculation:', isPremium);
                     remainingUses = isPremium ? Infinity : Math.max(0, 5 - todayUsage);
                 }
 
