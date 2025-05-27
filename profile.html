@@ -39,6 +39,13 @@
     
     <!-- Profile-specific styles -->
     <style>
+        :root {
+            --primary-color: #d4af37;
+            --primary-dark: #b8941f;
+            --secondary-color: #f8f9fa;
+            --success-color: #28a745;
+        }
+        
         .profile-header {
             background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
             color: white;
@@ -219,6 +226,41 @@
             display: flex;
             gap: 0.5rem;
         }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .btn-outline-primary {
+            background: transparent;
+            color: var(--primary-color);
+            border: 2px solid var(--primary-color);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
@@ -235,7 +277,7 @@
 
     <!-- Main Content Container -->
     <div id="main-content" style="display: none;">
-        <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 2rem;">
+        <div class="container">
             
             <!-- Navigation Header -->
             <div class="navigation-header">
@@ -420,14 +462,6 @@
         </div>
     </div>
 
-    <!-- Add spinning animation -->
-    <style>
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-    </style>
-
     <!-- Prevent subscription manager from loading at all on profile page -->
     <script>
         // Block subscription manager from running on profile page
@@ -514,6 +548,10 @@
         let profileUser = null;
         let authReady = false;
 
+        // Constants matching usage-limiter.js
+        const DAILY_LIMIT = 5;
+        const UNLIMITED_EMAILS = ['49.jayesh@gmail.com','kapil.mems@gmail.com'];
+
         // Wait for auth system to be ready
         function waitForAuth() {
             return new Promise((resolve) => {
@@ -527,12 +565,73 @@
                         authReady = true;
                         console.log('Auth ready via Firebase directly');
                         resolve({ isLoggedIn: true, user: window.firebaseAuth.currentUser });
+                    } else if (window.AuthVerification && window.AuthVerification.isAuthenticated()) {
+                        authReady = true;
+                        console.log('Auth ready via AuthVerification');
+                        resolve({ isLoggedIn: true, user: window.AuthVerification.user });
                     } else {
                         setTimeout(checkAuth, 100);
                     }
                 };
                 checkAuth();
             });
+        }
+
+        // Check if user has unlimited access (matching usage-limiter.js logic)
+        function checkUnlimitedAccess(email) {
+            return UNLIMITED_EMAILS.includes(email);
+        }
+
+        // Check premium status (matching usage-limiter.js logic)
+        function checkPremiumStatus(userData, userEmail) {
+            console.log('🔍 Starting premium status check...');
+            
+            // Method 1: Check unlimited emails first (highest priority)
+            if (checkUnlimitedAccess(userEmail)) {
+                console.log('💎 Unlimited access granted for email:', userEmail);
+                return { isPremium: true, isUnlimited: true, reason: 'unlimited_email' };
+            }
+            
+            // Method 2: Check Firestore subscription data
+            if (userData && userData.subscription) {
+                const subscription = userData.subscription;
+                const now = new Date();
+                const expiryDate = new Date(subscription.expiryDate);
+                
+                const isActive = subscription.isActive === true && expiryDate > now;
+                
+                console.log('💎 Firestore subscription check:', {
+                    isActive: subscription.isActive,
+                    expiryDate: expiryDate.toLocaleDateString(),
+                    now: now.toLocaleDateString(),
+                    expiryInFuture: expiryDate > now,
+                    finalPremiumStatus: isActive
+                });
+                
+                if (isActive) {
+                    return { isPremium: true, isUnlimited: false, reason: 'firestore_subscription' };
+                }
+            }
+            
+            // Method 3: Check Auth/SubscriptionManager (fallback)
+            if (window.Auth && typeof window.Auth.isPremium === 'boolean' && window.Auth.isPremium) {
+                console.log('🔄 Premium status from Auth.isPremium:', true);
+                return { isPremium: true, isUnlimited: false, reason: 'auth_service' };
+            }
+            
+            if (window.SubscriptionManager && typeof window.SubscriptionManager.isPremium === 'boolean' && window.SubscriptionManager.isPremium) {
+                console.log('🔄 Premium status from SubscriptionManager.isPremium:', true);
+                return { isPremium: true, isUnlimited: false, reason: 'subscription_manager' };
+            }
+            
+            // Method 4: Check AuthVerification (fallback)
+            if (window.AuthVerification && window.AuthVerification.isPremium) {
+                console.log('🔄 Premium status from AuthVerification.isPremium:', true);
+                return { isPremium: true, isUnlimited: false, reason: 'auth_verification' };
+            }
+            
+            console.log('❌ No premium status found - defaulting to standard');
+            return { isPremium: false, isUnlimited: false, reason: 'standard_account' };
         }
 
         // Update system status indicators
@@ -547,7 +646,8 @@
             // Authentication status - check multiple sources
             let isAuthenticated = false;
             if ((window.Auth && window.Auth.isLoggedIn) || 
-                (window.firebaseAuth && window.firebaseAuth.currentUser)) {
+                (window.firebaseAuth && window.firebaseAuth.currentUser) ||
+                (window.AuthVerification && window.AuthVerification.isAuthenticated())) {
                 isAuthenticated = true;
             }
 
@@ -568,21 +668,9 @@
                 firebaseStatusText.textContent = 'Firebase: Loading...';
             }
 
-            // Premium status - check multiple sources
-            let isPremium = false;
-            if (window.Auth && window.Auth.isPremium) {
-                isPremium = window.Auth.isPremium;
-            } else if (window.SubscriptionManager && window.SubscriptionManager.isPremium) {
-                isPremium = window.SubscriptionManager.isPremium;
-            }
-
-            if (isPremium) {
-                premiumStatus.className = 'status-indicator status-success';
-                premiumStatusText.textContent = 'Premium: Active';
-            } else {
-                premiumStatus.className = 'status-indicator status-warning';
-                premiumStatusText.textContent = 'Premium: Standard';
-            }
+            // Premium status - will be updated by loadUsageData()
+            premiumStatus.className = 'status-indicator status-warning';
+            premiumStatusText.textContent = 'Premium: Checking...';
         }
 
         // Load profile data from Firestore
@@ -601,6 +689,10 @@
                 isAuthenticated = true;
                 user = window.firebaseAuth.currentUser;
                 console.log('Using Firebase auth user');
+            } else if (window.AuthVerification && window.AuthVerification.isAuthenticated()) {
+                isAuthenticated = true;
+                user = window.AuthVerification.user;
+                console.log('Using AuthVerification user');
             }
             
             console.log('Authentication check:', { isAuthenticated, hasUser: !!user });
@@ -626,7 +718,7 @@
                     displayBasicUserInfo(user);
                 }
                 
-                // Load usage data
+                // Load usage data with correct premium detection
                 await loadUsageData();
                 
             } catch (error) {
@@ -700,12 +792,6 @@
                     memberSinceEl.textContent = 'Unknown';
                 }
             }
-
-            // Check and display account type
-            const isPremium = userData.subscription && 
-                             userData.subscription.isActive && 
-                             new Date(userData.subscription.expiryDate) > new Date();
-            setAccountType(isPremium);
         }
 
         // Display basic user info as fallback
@@ -735,8 +821,6 @@
             
             const avatar = document.getElementById('profile-avatar');
             if (avatar) avatar.innerHTML = displayName.charAt(0).toUpperCase();
-            
-            setAccountType(false); // Default to non-premium
         }
 
         // Display exam data
@@ -859,12 +943,14 @@
         }
 
         // Set account type display
-        function setAccountType(isPremium) {
+        function setAccountType(premiumData) {
             const badge = document.getElementById('account-type-badge');
             const typeText = document.getElementById('account-type-text');
 
             if (badge) {
-                if (isPremium) {
+                if (premiumData.isUnlimited) {
+                    badge.innerHTML = '<span class="account-badge unlimited-account"><i class="fas fa-infinity"></i> Unlimited Account</span>';
+                } else if (premiumData.isPremium) {
                     badge.innerHTML = '<span class="account-badge unlimited-account"><i class="fas fa-crown"></i> Premium Account</span>';
                 } else {
                     badge.innerHTML = '<span class="account-badge limited-account"><i class="fas fa-user"></i> Standard Account</span>';
@@ -872,107 +958,84 @@
             }
 
             if (typeText) {
-                if (isPremium) {
+                if (premiumData.isUnlimited) {
+                    typeText.innerHTML = '<span style="color: var(--success-color);"><i class="fas fa-infinity"></i> Unlimited (Special)</span>';
+                } else if (premiumData.isPremium) {
                     typeText.innerHTML = '<span style="color: var(--success-color);"><i class="fas fa-star"></i> Premium (Unlimited)</span>';
                 } else {
                     typeText.innerHTML = '<span style="color: #ffc107;"><i class="fas fa-user"></i> Standard (Limited)</span>';
                 }
             }
+
+            // Update system status
+            const premiumStatus = document.getElementById('premium-status');
+            const premiumStatusText = document.getElementById('premium-status-text');
+            
+            if (premiumData.isUnlimited) {
+                premiumStatus.className = 'status-indicator status-success';
+                premiumStatusText.textContent = 'Premium: Unlimited';
+            } else if (premiumData.isPremium) {
+                premiumStatus.className = 'status-indicator status-success';
+                premiumStatusText.textContent = 'Premium: Active';
+            } else {
+                premiumStatus.className = 'status-indicator status-warning';
+                premiumStatusText.textContent = 'Premium: Standard';
+            }
         }
 
-        window.toggleDebugSection = function() {
-            const debugSection = document.getElementById('debug-section');
-            const isVisible = debugSection.style.display !== 'none';
-            
-            if (isVisible) {
-                debugSection.style.display = 'none';
-            } else {
-                debugSection.style.display = 'block';
-                updateDebugInfo();
-            }
-        };
-
-        // Load usage data with proper premium detection
+        // Load usage data with proper premium detection (matching usage-limiter.js)
         async function loadUsageData() {
             try {
                 let todayUsage = 0;
-                let remainingUses = 5;
+                let remainingUses = DAILY_LIMIT;
                 let weeklyUsage = 0;
-                let isPremium = false;
+                let premiumData = { isPremium: false, isUnlimited: false, reason: 'unknown' };
 
-                console.log('🔍 Starting premium status check...');
+                if (!profileUser) {
+                    console.log('❌ No profile user available');
+                    setAccountType(premiumData);
+                    return;
+                }
 
-                // Method 1: Check from actual Firestore user data (most reliable)
+                // Get user data and check premium status using the same logic as usage-limiter.js
                 try {
                     const userData = await fetchUserDataFromFirestore(profileUser);
-                    console.log('📊 User data for premium check:', {
-                        hasSubscription: !!(userData && userData.subscription),
-                        subscriptionData: userData?.subscription
-                    });
+                    premiumData = checkPremiumStatus(userData, profileUser.email);
                     
-                    if (userData && userData.subscription) {
-                        const subscription = userData.subscription;
-                        const now = new Date();
-                        const expiryDate = new Date(subscription.expiryDate);
-                        
-                        isPremium = subscription.isActive === true && expiryDate > now;
-                        
-                        console.log('💎 Firestore premium check:', {
-                            isActive: subscription.isActive,
-                            expiryDate: expiryDate.toLocaleDateString(),
-                            now: now.toLocaleDateString(),
-                            expiryInFuture: expiryDate > now,
-                            finalPremiumStatus: isPremium
-                        });
-                    } else {
-                        console.log('❌ No subscription data in Firestore');
-                        isPremium = false;
-                    }
+                    console.log('✅ Final premium data:', premiumData);
                 } catch (firestoreError) {
                     console.log('⚠️ Could not fetch premium status from Firestore:', firestoreError);
-                    isPremium = false;
-                    
-                    // Fallback: Check from Auth/SubscriptionManager (less reliable)
-                    if (window.Auth && typeof window.Auth.isPremium === 'boolean') {
-                        isPremium = window.Auth.isPremium;
-                        console.log('🔄 Fallback to Auth.isPremium:', isPremium);
-                    } else if (window.SubscriptionManager && typeof window.SubscriptionManager.isPremium === 'boolean') {
-                        isPremium = window.SubscriptionManager.isPremium;
-                        console.log('🔄 Fallback to SubscriptionManager.isPremium:', isPremium);
-                    }
+                    // Fallback to basic premium check
+                    premiumData = checkPremiumStatus(null, profileUser.email);
                 }
 
-                console.log('✅ Final premium status for usage calculation:', isPremium);
-
-                // Calculate usage from localStorage
-                if (profileUser) {
-                    const today = new Date().toISOString().split('T')[0];
-                    const storageKey = `josaa_usage_${profileUser.uid}_${today}`;
-                    todayUsage = parseInt(localStorage.getItem(storageKey) || '0');
-                    
-                    console.log('📈 Usage calculation:', {
-                        todayUsage,
-                        isPremium,
-                        storageKey: storageKey.substring(0, 30) + '...'
-                    });
-                    
-                    // Calculate weekly usage
-                    weeklyUsage = calculateWeeklyUsage();
-                    
-                    // Calculate remaining uses
-                    if (isPremium) {
-                        remainingUses = Infinity;
-                    } else {
-                        remainingUses = Math.max(0, 5 - todayUsage);
-                    }
-                    
-                    console.log('🎯 Final usage numbers:', {
-                        todayUsage,
-                        weeklyUsage,
-                        remainingUses: remainingUses === Infinity ? '∞' : remainingUses,
-                        isPremium
-                    });
+                // Calculate usage from localStorage (same as usage-limiter.js)
+                const today = new Date().toISOString().split('T')[0];
+                const storageKey = `josaa_usage_${profileUser.uid}_${today}`;
+                todayUsage = parseInt(localStorage.getItem(storageKey) || '0');
+                
+                console.log('📈 Usage calculation:', {
+                    todayUsage,
+                    premiumData,
+                    storageKey: storageKey.substring(0, 30) + '...'
+                });
+                
+                // Calculate weekly usage
+                weeklyUsage = calculateWeeklyUsage();
+                
+                // Calculate remaining uses based on premium status
+                if (premiumData.isUnlimited || premiumData.isPremium) {
+                    remainingUses = Infinity;
+                } else {
+                    remainingUses = Math.max(0, DAILY_LIMIT - todayUsage);
                 }
+                
+                console.log('🎯 Final usage numbers:', {
+                    todayUsage,
+                    weeklyUsage,
+                    remainingUses: remainingUses === Infinity ? '∞' : remainingUses,
+                    premiumData
+                });
 
                 // Update display
                 document.getElementById('today-usage').textContent = todayUsage;
@@ -981,7 +1044,7 @@
 
                 // Update progress bar
                 if (remainingUses !== Infinity) {
-                    const percentage = Math.min((todayUsage / 5) * 100, 100);
+                    const percentage = Math.min((todayUsage / DAILY_LIMIT) * 100, 100);
                     document.getElementById('usage-percentage').textContent = `${Math.round(percentage)}%`;
                     document.getElementById('usage-progress').style.width = `${percentage}%`;
                     
@@ -1000,17 +1063,22 @@
                     document.getElementById('usage-progress').style.backgroundColor = 'var(--success-color)';
                 }
 
+                // Set account type based on premium data
+                setAccountType(premiumData);
+
                 // Load usage history
                 loadUsageHistory();
+                
             } catch (error) {
                 console.error('❌ Error loading usage data:', error);
                 
                 // Fallback to non-premium if there's an error
                 document.getElementById('today-usage').textContent = '0';
-                document.getElementById('remaining-uses').textContent = '5';
+                document.getElementById('remaining-uses').textContent = DAILY_LIMIT.toString();
                 document.getElementById('weekly-usage').textContent = '0';
                 document.getElementById('usage-percentage').textContent = '0%';
                 document.getElementById('usage-progress').style.width = '0%';
+                setAccountType({ isPremium: false, isUnlimited: false, reason: 'error' });
             }
         }
 
@@ -1164,6 +1232,7 @@
                     authenticated: !!profileUser,
                     email: profileUser.email,
                     uid: profileUser.uid.substring(0, 8) + '...',
+                    isUnlimited: checkUnlimitedAccess(profileUser.email),
                     premium: window.Auth?.isPremium || false
                 }, null, 2);
 
@@ -1172,7 +1241,9 @@
                 document.getElementById('usage-debug').textContent = JSON.stringify({
                     todayUsage: localStorage.getItem(todayKey) || '0',
                     totalKeys: Object.keys(localStorage).filter(k => k.startsWith('josaa_usage_')).length,
-                    weeklyUsage: calculateWeeklyUsage()
+                    weeklyUsage: calculateWeeklyUsage(),
+                    unlimitedEmails: UNLIMITED_EMAILS,
+                    isInUnlimitedList: checkUnlimitedAccess(profileUser.email)
                 }, null, 2);
             }
         }
