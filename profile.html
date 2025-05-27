@@ -653,29 +653,44 @@
 
         // Display user profile information
         function displayUserProfile(userData) {
-            // Basic profile info
+            // Basic profile info with null checks
             const displayName = userData.name || userData.displayName || profileUser.email.split('@')[0];
-            document.getElementById('user-name').textContent = displayName;
-            document.getElementById('user-name-display').textContent = userData.name || 'Not provided';
-            document.getElementById('user-email').textContent = userData.email || profileUser.email;
-            document.getElementById('user-email-display').textContent = userData.email || profileUser.email;
-            document.getElementById('user-mobile').textContent = userData.mobileNumber || 'Not provided';
-            document.getElementById('user-role').textContent = userData.userRole || 'student';
+            
+            const userNameEl = document.getElementById('user-name');
+            if (userNameEl) userNameEl.textContent = displayName;
+            
+            const userNameDisplayEl = document.getElementById('user-name-display');
+            if (userNameDisplayEl) userNameDisplayEl.textContent = userData.name || 'Not provided';
+            
+            const userEmailEl = document.getElementById('user-email');
+            if (userEmailEl) userEmailEl.textContent = userData.email || profileUser.email;
+            
+            const userEmailDisplayEl = document.getElementById('user-email-display');
+            if (userEmailDisplayEl) userEmailDisplayEl.textContent = userData.email || profileUser.email;
+            
+            const userMobileEl = document.getElementById('user-mobile');
+            if (userMobileEl) userMobileEl.textContent = userData.mobileNumber || 'Not provided';
+            
+            const userRoleEl = document.getElementById('user-role');
+            if (userRoleEl) userRoleEl.textContent = userData.userRole || 'student';
             
             // Set avatar initial
             const avatar = document.getElementById('profile-avatar');
-            avatar.innerHTML = displayName.charAt(0).toUpperCase();
+            if (avatar) avatar.innerHTML = displayName.charAt(0).toUpperCase();
 
             // Member since
-            if (userData.createdAt) {
-                const createdDate = new Date(userData.createdAt);
-                document.getElementById('member-since').textContent = createdDate.toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                });
-            } else {
-                document.getElementById('member-since').textContent = 'Unknown';
+            const memberSinceEl = document.getElementById('member-since');
+            if (memberSinceEl) {
+                if (userData.createdAt) {
+                    const createdDate = new Date(userData.createdAt);
+                    memberSinceEl.textContent = createdDate.toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    });
+                } else {
+                    memberSinceEl.textContent = 'Unknown';
+                }
             }
 
             // Check and display account type
@@ -688,16 +703,30 @@
         // Display basic user info as fallback
         function displayBasicUserInfo(user) {
             const displayName = user.displayName || user.email.split('@')[0];
-            document.getElementById('user-name').textContent = displayName;
-            document.getElementById('user-name-display').textContent = user.displayName || 'Not provided';
-            document.getElementById('user-email').textContent = user.email;
-            document.getElementById('user-email-display').textContent = user.email;
-            document.getElementById('user-mobile').textContent = 'Not available';
-            document.getElementById('user-role').textContent = 'student';
-            document.getElementById('member-since').textContent = 'Unknown';
+            
+            const userNameEl = document.getElementById('user-name');
+            if (userNameEl) userNameEl.textContent = displayName;
+            
+            const userNameDisplayEl = document.getElementById('user-name-display');
+            if (userNameDisplayEl) userNameDisplayEl.textContent = user.displayName || 'Not provided';
+            
+            const userEmailEl = document.getElementById('user-email');
+            if (userEmailEl) userEmailEl.textContent = user.email;
+            
+            const userEmailDisplayEl = document.getElementById('user-email-display');
+            if (userEmailDisplayEl) userEmailDisplayEl.textContent = user.email;
+            
+            const userMobileEl = document.getElementById('user-mobile');
+            if (userMobileEl) userMobileEl.textContent = 'Not available';
+            
+            const userRoleEl = document.getElementById('user-role');
+            if (userRoleEl) userRoleEl.textContent = 'student';
+            
+            const memberSinceEl = document.getElementById('member-since');
+            if (memberSinceEl) memberSinceEl.textContent = 'Unknown';
             
             const avatar = document.getElementById('profile-avatar');
-            avatar.innerHTML = displayName.charAt(0).toUpperCase();
+            if (avatar) avatar.innerHTML = displayName.charAt(0).toUpperCase();
             
             setAccountType(false); // Default to non-premium
         }
@@ -825,16 +854,21 @@
         function setAccountType(isPremium) {
             const badge = document.getElementById('account-type-badge');
             const typeText = document.getElementById('account-type-text');
-            const dailyLimit = document.getElementById('daily-limit');
 
-            if (isPremium) {
-                badge.innerHTML = '<span class="account-badge unlimited-account"><i class="fas fa-crown"></i> Premium Account</span>';
-                typeText.innerHTML = '<span style="color: var(--success-color);"><i class="fas fa-star"></i> Premium (Unlimited)</span>';
-                dailyLimit.innerHTML = '<span style="color: var(--success-color);">Unlimited</span>';
-            } else {
-                badge.innerHTML = '<span class="account-badge limited-account"><i class="fas fa-user"></i> Standard Account</span>';
-                typeText.innerHTML = '<span style="color: #ffc107;"><i class="fas fa-user"></i> Standard (Limited)</span>';
-                dailyLimit.innerHTML = '<span style="color: #666;">5 generations per day</span>';
+            if (badge) {
+                if (isPremium) {
+                    badge.innerHTML = '<span class="account-badge unlimited-account"><i class="fas fa-crown"></i> Premium Account</span>';
+                } else {
+                    badge.innerHTML = '<span class="account-badge limited-account"><i class="fas fa-user"></i> Standard Account</span>';
+                }
+            }
+
+            if (typeText) {
+                if (isPremium) {
+                    typeText.innerHTML = '<span style="color: var(--success-color);"><i class="fas fa-star"></i> Premium (Unlimited)</span>';
+                } else {
+                    typeText.innerHTML = '<span style="color: #ffc107;"><i class="fas fa-user"></i> Standard (Limited)</span>';
+                }
             }
         }
 
