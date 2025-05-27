@@ -3,34 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="User Profile - JOSAA College Preference List Generator">
-    <title>My Profile - JOSAA Preference Generator</title>
+    <meta name="description" content="User Profile - NextStep Academic Guidance">
+    <title>My Profile - NextStep</title>
     
-    <!-- Favicon -->
-    <link rel="icon" type="image/x-icon" href="./static/favicon.ico">
-    
-    <!-- CSS -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="./static/css/main.css" rel="stylesheet">
-
-    <!-- Hash Tracker for Debugging -->
-    <script src="./static/js/hash-tracker.js" defer></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Your existing CSS files -->
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/modal.css">
+    <link rel="stylesheet" href="css/responsive.css">
     
     <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/11.4.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/11.4.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore-compat.js"></script>
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
+      import { getAuth } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js";
+      import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-analytics.js";
+
+      const firebaseConfig = {
+        apiKey: "AIzaSyC7tvZe9NeHRhYuTVrQnkaSG7Nkj3ZS40U",
+        authDomain: "nextstep-log.firebaseapp.com",
+        projectId: "nextstep-log",
+        storageBucket: "nextstep-log.firebasestorage.app",
+        messagingSenderId: "9308831285",
+        appId: "1:9308831285:web:d55ed6865804c50f743b7c",
+        measurementId: "G-BPGP3TBN3N"
+      };
+
+      const app = initializeApp(firebaseConfig);
+      const auth = getAuth(app);
+      const analytics = getAnalytics(app);
+      window.firebaseAuth = auth;
+    </script>
     
     <!-- Profile-specific styles -->
     <style>
-        .profile-card {
+        .profile-header {
             background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
             color: white;
             border-radius: 15px;
             padding: 2rem;
             margin-bottom: 2rem;
             box-shadow: 0 4px 20px rgba(212, 175, 55, 0.3);
+            text-align: center;
         }
         
         .profile-avatar {
@@ -133,150 +149,226 @@
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
             text-align: center;
         }
+        
         .auth-error h2 {
             color: #e53935;
             margin-bottom: 20px;
         }
+        
         .auth-error a {
             color: #1e88e5;
             text-decoration: none;
             font-weight: 500;
+        }
+
+        .system-status {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: #dc3545;
+        }
+
+        .status-success { background-color: #28a745; }
+        .status-warning { background-color: #ffc107; }
+        .status-error { background-color: #dc3545; }
+
+        .navigation-header {
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+            border-radius: 8px;
+            padding: 1rem;
+        }
+
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .back-button:hover {
+            color: var(--primary-dark);
+            transform: translateX(-2px);
+        }
+
+        .profile-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 0.5rem;
         }
     </style>
 </head>
 <body>
     <!-- Loading Overlay -->
     <div id="auth-loading" class="loading-overlay">
-        <div class="d-flex flex-column align-items-center">
-            <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">Loading...</span>
-            </div>
-            <p class="mt-2">Loading profile...</p>
+        <div style="text-align: center;">
+            <div style="width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid var(--primary-color); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 1rem;"></div>
+            <p>Loading profile...</p>
         </div>
     </div>
 
-    <!-- Error Alert Container -->
-    <div id="error-alert-container" style="position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 1060; width: 90%; max-width: 600px;"></div>
-
     <!-- Authentication error container -->
-    <div id="auth-error-container" class="auth-error" style="display: none;"></div>
+    <div id="auth-error-container" class="auth-error"></div>
 
     <!-- Main Content Container -->
     <div id="main-content" style="display: none;">
-        <div class="container py-4">
-            <!-- Navigation -->
-            <nav class="bg-white shadow-md mb-4">
-                <div class="container px-4">
-                    <div class="flex items-center justify-between h-16">
-                        <div class="d-flex align-items-center">
-                            <a href="https://nextstepedu.co.in" class="d-flex align-items-center text-decoration-none">
-                                <img src="./static/nextstep_logo.jpeg" alt="Logo" class="h-8" style="height: 32px; width: auto;">
-                                <span class="ms-2 fw-bold fs-4">NextStep</span>
-                            </a>
-                        </div>
-                        <div class="d-flex align-items-center gap-3">
-                            <a href="./index.html" class="btn btn-outline-primary">
-                                <i class="fas fa-arrow-left"></i> Back to Generator
-                            </a>
-                        </div>
+        <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 2rem;">
+            
+            <!-- Navigation Header -->
+            <div class="navigation-header">
+                <div class="profile-nav">
+                    <a href="index.html" class="back-button">
+                        <i class="fas fa-arrow-left"></i>
+                        Back to Home
+                    </a>
+                    <div class="btn-group">
+                        <button class="btn btn-primary" onclick="refreshProfileData()">
+                            <i class="fas fa-sync-alt"></i> Refresh
+                        </button>
+                        <a href="https://nextstepedu.co.in" class="btn btn-outline-primary">
+                            <i class="fas fa-home"></i> NextStep Home
+                        </a>
                     </div>
                 </div>
-            </nav>
+            </div>
+
+            <!-- System Status -->
+            <div class="stats-card">
+                <h5 style="margin-bottom: 1rem;"><i class="fas fa-heartbeat"></i> System Status</h5>
+                <div class="system-status" id="system-status">
+                    <div class="status-item">
+                        <div class="status-indicator" id="auth-status"></div>
+                        <span id="auth-status-text">Authentication: Checking...</span>
+                    </div>
+                    <div class="status-item">
+                        <div class="status-indicator" id="firebase-status"></div>
+                        <span id="firebase-status-text">Firebase: Checking...</span>
+                    </div>
+                    <div class="status-item">
+                        <div class="status-indicator" id="premium-status"></div>
+                        <span id="premium-status-text">Premium: Checking...</span>
+                    </div>
+                </div>
+            </div>
 
             <!-- Profile Header -->
-            <div class="profile-card text-center">
+            <div class="profile-header">
                 <div class="profile-avatar" id="profile-avatar">
                     <i class="fas fa-user"></i>
                 </div>
                 <h2 id="user-name">Loading...</h2>
-                <p id="user-email" class="mb-2">Loading...</p>
+                <p id="user-email" style="margin-bottom: 0.5rem;">Loading...</p>
                 <div id="account-type-badge"></div>
             </div>
 
-            <div class="row">
+            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem;">
                 <!-- Usage Statistics -->
-                <div class="col-md-8">
+                <div>
                     <div class="stats-card">
-                        <h4 class="mb-4"><i class="fas fa-chart-bar"></i> Usage Statistics</h4>
+                        <h4 style="margin-bottom: 1.5rem;"><i class="fas fa-chart-bar"></i> Usage Statistics</h4>
                         
-                        <div class="row text-center mb-4">
-                            <div class="col-md-4">
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; text-align: center; margin-bottom: 2rem;">
+                            <div>
                                 <div class="stat-icon"><i class="fas fa-calendar-day"></i></div>
                                 <div class="stat-number" id="today-usage">-</div>
-                                <div class="text-muted">Today's Usage</div>
+                                <div style="color: #666; font-size: 0.9rem;">Today's Usage</div>
                             </div>
-                            <div class="col-md-4">
+                            <div>
                                 <div class="stat-icon"><i class="fas fa-bolt"></i></div>
                                 <div class="stat-number" id="remaining-uses">-</div>
-                                <div class="text-muted">Remaining Today</div>
+                                <div style="color: #666; font-size: 0.9rem;">Remaining Today</div>
                             </div>
-                            <div class="col-md-4">
+                            <div>
                                 <div class="stat-icon"><i class="fas fa-calendar-week"></i></div>
                                 <div class="stat-number" id="weekly-usage">-</div>
-                                <div class="text-muted">This Week</div>
+                                <div style="color: #666; font-size: 0.9rem;">This Week</div>
                             </div>
                         </div>
 
                         <!-- Usage Progress Bar -->
-                        <div class="mb-3">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div style="margin-bottom: 1rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
                                 <span>Daily Limit Progress</span>
                                 <span id="usage-percentage">0%</span>
                             </div>
-                            <div class="progress">
-                                <div class="progress-bar" id="usage-progress" role="progressbar" style="width: 0%"></div>
+                            <div style="width: 100%; height: 8px; background-color: #f0f0f0; border-radius: 4px; overflow: hidden;">
+                                <div id="usage-progress" style="height: 100%; background-color: var(--primary-color); width: 0%; transition: width 0.3s ease;"></div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Recent Activity -->
                     <div class="stats-card">
-                        <h4 class="mb-3"><i class="fas fa-history"></i> Recent Activity</h4>
+                        <h4 style="margin-bottom: 1rem;"><i class="fas fa-history"></i> Recent Activity</h4>
                         <div class="usage-history" id="usage-history">
-                            <div class="text-center text-muted py-3">
-                                <i class="fas fa-spinner fa-spin"></i> Loading activity...
+                            <div style="text-align: center; color: #666; padding: 2rem;">
+                                <div style="width: 20px; height: 20px; border: 2px solid #f3f3f3; border-top: 2px solid var(--primary-color); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 0.5rem;"></div>
+                                Loading activity...
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Account Information -->
-                <div class="col-md-4">
+                <!-- Account Information & Actions -->
+                <div>
                     <div class="stats-card">
-                        <h4 class="mb-3"><i class="fas fa-user-cog"></i> Account Info</h4>
+                        <h4 style="margin-bottom: 1rem;"><i class="fas fa-user-cog"></i> Account Info</h4>
                         
-                        <div class="mb-3">
-                            <strong>User ID:</strong>
-                            <p class="text-muted small" id="user-id">Loading...</p>
+                        <div style="margin-bottom: 1rem;">
+                            <strong>Email:</strong>
+                            <p id="user-email-display" style="color: #666; font-size: 0.9rem; margin: 0.25rem 0;">Loading...</p>
                         </div>
                         
-                        <div class="mb-3">
+                        <div style="margin-bottom: 1rem;">
                             <strong>Account Type:</strong>
-                            <p id="account-type-text">Loading...</p>
+                            <p id="account-type-text" style="margin: 0.25rem 0;">Loading...</p>
                         </div>
                         
-                        <div class="mb-3">
+                        <div style="margin-bottom: 1rem;">
                             <strong>Daily Limit:</strong>
-                            <p id="daily-limit">Loading...</p>
+                            <p id="daily-limit" style="margin: 0.25rem 0;">Loading...</p>
                         </div>
                         
-                        <div class="mb-3">
-                            <strong>Login Status:</strong>
-                            <p class="text-success"><i class="fas fa-check-circle"></i> Authenticated</p>
+                        <div style="margin-bottom: 1rem;">
+                            <strong>Status:</strong>
+                            <p id="login-status" style="margin: 0.25rem 0; color: var(--success-color);"><i class="fas fa-check-circle"></i> Authenticated</p>
                         </div>
 
-                        <div class="mb-3">
-                            <strong>Session Info:</strong>
-                            <p class="text-muted small" id="session-info">Loading...</p>
+                        <div style="margin-bottom: 1rem;">
+                            <strong>Session:</strong>
+                            <p id="session-info" style="color: #666; font-size: 0.9rem; margin: 0.25rem 0;">Active</p>
                         </div>
                     </div>
 
                     <!-- Quick Actions -->
                     <div class="stats-card">
-                        <h4 class="mb-3"><i class="fas fa-tools"></i> Quick Actions</h4>
+                        <h4 style="margin-bottom: 1rem;"><i class="fas fa-tools"></i> Quick Actions</h4>
                         
-                        <div class="d-grid gap-2">
-                            <button class="btn btn-primary" onclick="refreshUsageData()">
+                        <div style="display: grid; gap: 0.75rem;">
+                            <button class="btn btn-primary" onclick="refreshProfileData()">
                                 <i class="fas fa-sync-alt"></i> Refresh Data
                             </button>
                             
@@ -288,458 +380,430 @@
                                 <i class="fas fa-download"></i> Export Usage Data
                             </button>
                             
-                            <a href="./index.html" class="btn btn-success">
-                                <i class="fas fa-search"></i> Generate Preferences
+                            <a href="https://josaa.nextstepedu.co.in/" class="btn btn-success">
+                                <i class="fas fa-search"></i> JOSAA Generator
                             </a>
-
-                            <a href="https://nextstepedu.co.in" class="btn btn-outline-primary">
-                                <i class="fas fa-home"></i> NextStep Home
+                            
+                            <a href="https://mhtcet.nextstepedu.co.in" class="btn btn-success">
+                                <i class="fas fa-search"></i> MHTCET Generator
                             </a>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Debug Information (can be hidden in production) -->
-            <div class="stats-card mt-4" id="debug-info" style="display: none;">
-                <h4 class="mb-3"><i class="fas fa-bug"></i> Debug Information</h4>
-                <div class="row">
-                    <div class="col-md-6">
-                        <h6>Authentication State:</h6>
-                        <pre id="auth-debug" class="bg-light p-2 small"></pre>
+            <!-- Debug Section (Hidden by default) -->
+            <div class="stats-card" id="debug-section" style="display: none;">
+                <h4 style="margin-bottom: 1rem;"><i class="fas fa-bug"></i> Debug Information</h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div>
+                        <h6>Authentication:</h6>
+                        <pre id="auth-debug" style="background: #f8f9fa; padding: 1rem; border-radius: 4px; font-size: 0.8rem; overflow-x: auto;"></pre>
                     </div>
-                    <div class="col-md-6">
-                        <h6>Usage State:</h6>
-                        <pre id="usage-debug" class="bg-light p-2 small"></pre>
+                    <div>
+                        <h6>Usage Data:</h6>
+                        <pre id="usage-debug" style="background: #f8f9fa; padding: 1rem; border-radius: 4px; font-size: 0.8rem; overflow-x: auto;"></pre>
                     </div>
                 </div>
-                <button class="btn btn-sm btn-secondary" onclick="toggleDebugInfo()">
-                    <i class="fas fa-eye-slash"></i> Hide Debug Info
+                <button class="btn btn-secondary" onclick="toggleDebugSection()">
+                    <i class="fas fa-eye-slash"></i> Hide Debug
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- Scripts -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <!-- Add spinning animation -->
+    <style>
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
 
-    <!-- Profile-specific JavaScript -->
+    <!-- Your existing scripts -->
+    <script type="module" src="js/auth/index.js"></script>
+
+    <!-- Profile Management JavaScript -->
     <script>
-        // Profile data management
-        const ProfileManager = {
-            user: null,
-            usageData: {},
-            debugMode: false,
-            
-            async init() {
-                console.log('Initializing Profile Manager...');
-                
-                // Enable debug mode if URL contains debug parameter
-                const urlParams = new URLSearchParams(window.location.search);
-                this.debugMode = urlParams.has('debug');
-                if (this.debugMode) {
-                    document.getElementById('debug-info').style.display = 'block';
-                }
-                
-                // Wait for authentication to be ready
-                if (!window.AuthVerification || !window.AuthVerification.isAuthenticated()) {
-                    console.log('User not authenticated, showing error');
-                    this.showAuthError();
-                    return false;
-                }
-                
-                this.user = window.AuthVerification.user;
-                console.log('User authenticated:', this.user);
-                
-                // Update debug info
-                this.updateDebugInfo();
-                
-                // Load profile data
-                await this.loadProfileData();
-                await this.loadUsageData();
-                
-                return true;
-            },
-            
-            async loadProfileData() {
-                if (!this.user) return;
-                
-                // Set user name (extract from email)
-                const userName = this.user.email.split('@')[0];
-                document.getElementById('user-name').textContent = userName.charAt(0).toUpperCase() + userName.slice(1);
-                document.getElementById('user-email').textContent = this.user.email;
-                document.getElementById('user-id').textContent = this.user.uid;
-                
-                // Set profile avatar initial
-                const avatarElement = document.getElementById('profile-avatar');
-                avatarElement.innerHTML = userName.charAt(0).toUpperCase();
-                
-                // Session info
-                const sessionInfo = document.getElementById('session-info');
-                const loginTime = sessionStorage.getItem('loginTime') || 'Unknown';
-                sessionInfo.textContent = `Logged in: ${new Date(loginTime).toLocaleString() || 'Session active'}`;
-                
-                // Check account type
-                const isUnlimited = window.UsageLimiter && 
-                    window.UsageLimiter.UNLIMITED_EMAILS.includes(this.user.email);
-                
-                this.setAccountType(isUnlimited);
-            },
-            
-            setAccountType(isUnlimited) {
-                const badge = document.getElementById('account-type-badge');
-                const typeText = document.getElementById('account-type-text');
-                const dailyLimit = document.getElementById('daily-limit');
-                
-                if (isUnlimited) {
-                    badge.innerHTML = '<span class="account-badge unlimited-account"><i class="fas fa-crown"></i> Premium Account</span>';
-                    typeText.innerHTML = '<span class="text-success"><i class="fas fa-star"></i> Premium (Unlimited)</span>';
-                    dailyLimit.innerHTML = '<span class="text-success">Unlimited</span>';
-                } else {
-                    badge.innerHTML = '<span class="account-badge limited-account"><i class="fas fa-user"></i> Standard Account</span>';
-                    typeText.innerHTML = '<span class="text-warning"><i class="fas fa-user"></i> Standard (Limited)</span>';
-                    dailyLimit.innerHTML = `<span class="text-muted">${window.UsageLimiter?.DAILY_LIMIT || 5} generations per day</span>`;
-                }
-            },
-            
-            async loadUsageData() {
-                try {
-                    // Get usage information
-                    let usageInfo = { remainingUses: 0, usage: 0 };
-                    
-                    if (window.FirestoreUsageTracker) {
-                        usageInfo = await window.FirestoreUsageTracker.checkAndUpdateUsage(false);
-                    } else if (window.UsageLimiter) {
-                        usageInfo = await window.UsageLimiter.checkAndUpdateUsage(false);
-                    }
-                    
-                    console.log('Usage info:', usageInfo);
-                    
-                    // Update UI
-                    this.updateUsageDisplay(usageInfo);
-                    this.loadUsageHistory();
-                    this.updateDebugInfo();
-                    
-                } catch (error) {
-                    console.error('Error loading usage data:', error);
-                    this.showUsageError();
-                }
-            },
-            
-            updateUsageDisplay(usageInfo) {
-                const todayUsage = usageInfo.usage || 0;
-                const remainingUses = usageInfo.remainingUses === Infinity ? '∞' : (usageInfo.remainingUses || 0);
-                const dailyLimit = window.UsageLimiter?.DAILY_LIMIT || 5;
-                
-                document.getElementById('today-usage').textContent = todayUsage;
-                document.getElementById('remaining-uses').textContent = remainingUses;
-                
-                // Calculate weekly usage
-                const weeklyUsage = this.calculateWeeklyUsage();
-                document.getElementById('weekly-usage').textContent = weeklyUsage;
-                
-                // Calculate and show progress
-                if (usageInfo.remainingUses !== Infinity) {
-                    const percentage = Math.min((todayUsage / dailyLimit) * 100, 100);
-                    document.getElementById('usage-percentage').textContent = `${Math.round(percentage)}%`;
-                    
-                    const progressBar = document.getElementById('usage-progress');
-                    progressBar.style.width = `${percentage}%`;
-                    
-                    // Color code the progress bar
-                    progressBar.className = 'progress-bar';
-                    if (percentage >= 80) {
-                        progressBar.classList.add('bg-danger');
-                    } else if (percentage >= 60) {
-                        progressBar.classList.add('bg-warning');
+        let profileUser = null;
+        let authReady = false;
+
+        // Wait for auth system to be ready
+        function waitForAuth() {
+            return new Promise((resolve) => {
+                const checkAuth = () => {
+                    if (window.Auth && window.Auth.isLoggedIn !== undefined) {
+                        authReady = true;
+                        resolve(window.Auth);
                     } else {
-                        progressBar.classList.add('bg-success');
+                        setTimeout(checkAuth, 100);
+                    }
+                };
+                checkAuth();
+            });
+        }
+
+        // Update system status indicators
+        function updateSystemStatus() {
+            const authStatus = document.getElementById('auth-status');
+            const authStatusText = document.getElementById('auth-status-text');
+            const firebaseStatus = document.getElementById('firebase-status');
+            const firebaseStatusText = document.getElementById('firebase-status-text');
+            const premiumStatus = document.getElementById('premium-status');
+            const premiumStatusText = document.getElementById('premium-status-text');
+
+            // Authentication status
+            if (authReady && window.Auth && window.Auth.isLoggedIn) {
+                authStatus.className = 'status-indicator status-success';
+                authStatusText.textContent = 'Authentication: Connected';
+            } else {
+                authStatus.className = 'status-indicator status-error';
+                authStatusText.textContent = 'Authentication: Not Connected';
+            }
+
+            // Firebase status
+            if (window.firebaseAuth) {
+                firebaseStatus.className = 'status-indicator status-success';
+                firebaseStatusText.textContent = 'Firebase: Connected';
+            } else {
+                firebaseStatus.className = 'status-indicator status-warning';
+                firebaseStatusText.textContent = 'Firebase: Loading...';
+            }
+
+            // Premium status
+            const isPremium = window.Auth && window.Auth.isPremium;
+            if (isPremium) {
+                premiumStatus.className = 'status-indicator status-success';
+                premiumStatusText.textContent = 'Premium: Active';
+            } else {
+                premiumStatus.className = 'status-indicator status-warning';
+                premiumStatusText.textContent = 'Premium: Standard';
+            }
+        }
+
+        // Load profile data
+        async function loadProfileData() {
+            if (!authReady || !window.Auth || !window.Auth.isLoggedIn) {
+                showAuthError();
+                return;
+            }
+
+            profileUser = window.Auth.user;
+            
+            // Update basic profile info
+            document.getElementById('user-name').textContent = profileUser.displayName || profileUser.email.split('@')[0];
+            document.getElementById('user-email').textContent = profileUser.email;
+            document.getElementById('user-email-display').textContent = profileUser.email;
+            
+            // Set avatar initial
+            const avatar = document.getElementById('profile-avatar');
+            const userName = profileUser.displayName || profileUser.email.split('@')[0];
+            avatar.innerHTML = userName.charAt(0).toUpperCase();
+
+            // Check account type
+            const isPremium = window.Auth.isPremium;
+            setAccountType(isPremium);
+
+            // Load usage data
+            await loadUsageData();
+        }
+
+        // Set account type display
+        function setAccountType(isPremium) {
+            const badge = document.getElementById('account-type-badge');
+            const typeText = document.getElementById('account-type-text');
+            const dailyLimit = document.getElementById('daily-limit');
+
+            if (isPremium) {
+                badge.innerHTML = '<span class="account-badge unlimited-account"><i class="fas fa-crown"></i> Premium Account</span>';
+                typeText.innerHTML = '<span style="color: var(--success-color);"><i class="fas fa-star"></i> Premium (Unlimited)</span>';
+                dailyLimit.innerHTML = '<span style="color: var(--success-color);">Unlimited</span>';
+            } else {
+                badge.innerHTML = '<span class="account-badge limited-account"><i class="fas fa-user"></i> Standard Account</span>';
+                typeText.innerHTML = '<span style="color: #ffc107;"><i class="fas fa-user"></i> Standard (Limited)</span>';
+                dailyLimit.innerHTML = '<span style="color: #666;">5 generations per day</span>';
+            }
+        }
+
+        // Load usage data
+        async function loadUsageData() {
+            try {
+                let todayUsage = 0;
+                let remainingUses = 5;
+                let weeklyUsage = 0;
+
+                // Try to get usage from localStorage (simplified for demo)
+                if (profileUser) {
+                    const today = new Date().toISOString().split('T')[0];
+                    const storageKey = `josaa_usage_${profileUser.uid}_${today}`;
+                    todayUsage = parseInt(localStorage.getItem(storageKey) || '0');
+                    
+                    // Calculate weekly usage
+                    weeklyUsage = calculateWeeklyUsage();
+                    
+                    // Check if premium
+                    const isPremium = window.Auth && window.Auth.isPremium;
+                    remainingUses = isPremium ? Infinity : Math.max(0, 5 - todayUsage);
+                }
+
+                // Update display
+                document.getElementById('today-usage').textContent = todayUsage;
+                document.getElementById('remaining-uses').textContent = remainingUses === Infinity ? '∞' : remainingUses;
+                document.getElementById('weekly-usage').textContent = weeklyUsage;
+
+                // Update progress bar
+                if (remainingUses !== Infinity) {
+                    const percentage = Math.min((todayUsage / 5) * 100, 100);
+                    document.getElementById('usage-percentage').textContent = `${Math.round(percentage)}%`;
+                    document.getElementById('usage-progress').style.width = `${percentage}%`;
+                    
+                    // Color code progress bar
+                    const progressBar = document.getElementById('usage-progress');
+                    if (percentage >= 80) {
+                        progressBar.style.backgroundColor = '#dc3545';
+                    } else if (percentage >= 60) {
+                        progressBar.style.backgroundColor = '#ffc107';
+                    } else {
+                        progressBar.style.backgroundColor = 'var(--primary-color)';
                     }
                 } else {
                     document.getElementById('usage-percentage').textContent = 'Unlimited';
                     document.getElementById('usage-progress').style.width = '100%';
-                    document.getElementById('usage-progress').classList.add('bg-success');
+                    document.getElementById('usage-progress').style.backgroundColor = 'var(--success-color)';
                 }
-            },
-            
-            calculateWeeklyUsage() {
-                if (!this.user) return 0;
-                
-                let weeklyTotal = 0;
-                const today = new Date();
-                
-                for (let i = 0; i < 7; i++) {
-                    const date = new Date(today);
-                    date.setDate(today.getDate() - i);
-                    const dateStr = date.toISOString().split('T')[0];
-                    const storageKey = `josaa_usage_${this.user.uid}_${dateStr}`;
-                    weeklyTotal += parseInt(localStorage.getItem(storageKey) || '0');
-                }
-                
-                return weeklyTotal;
-            },
-            
-            loadUsageHistory() {
-                const historyContainer = document.getElementById('usage-history');
-                
-                try {
-                    // Try to load usage history from localStorage
-                    const history = this.getUsageHistory();
-                    
-                    if (history.length === 0) {
-                        historyContainer.innerHTML = `
-                            <div class="text-center text-muted py-3">
-                                <i class="fas fa-info-circle"></i> No usage history available
-                            </div>
-                        `;
-                    } else {
-                        historyContainer.innerHTML = history.map(day => `
-                            <div class="usage-day">
-                                <span>${day.date}</span>
-                                <span class="badge ${day.count > 0 ? 'bg-primary' : 'bg-light text-dark'}">${day.count} generations</span>
-                            </div>
-                        `).join('');
-                    }
-                } catch (error) {
-                    console.error('Error loading usage history:', error);
-                    historyContainer.innerHTML = `
-                        <div class="text-center text-muted py-3">
-                            <i class="fas fa-exclamation-triangle"></i> Error loading history
-                        </div>
-                    `;
-                }
-            },
-            
-            getUsageHistory() {
-                if (!this.user) return [];
-                
-                const history = [];
-                const today = new Date();
-                
-                // Get last 7 days of usage from localStorage
-                for (let i = 0; i < 7; i++) {
-                    const date = new Date(today);
-                    date.setDate(today.getDate() - i);
-                    const dateStr = date.toISOString().split('T')[0];
-                    const storageKey = `josaa_usage_${this.user.uid}_${dateStr}`;
-                    
-                    const usage = parseInt(localStorage.getItem(storageKey) || '0');
-                    
-                    history.push({
-                        date: date.toLocaleDateString('en-US', { 
-                            weekday: 'short', 
-                            month: 'short', 
-                            day: 'numeric' 
-                        }),
-                        count: usage,
-                        dateObj: date
-                    });
-                }
-                
-                return history;
-            },
-            
-            updateDebugInfo() {
-                if (!this.debugMode) return;
-                
-                const authDebug = document.getElementById('auth-debug');
-                const usageDebug = document.getElementById('usage-debug');
-                
-                if (authDebug) {
-                    authDebug.textContent = JSON.stringify({
-                        authenticated: window.AuthVerification?.isAuthenticated(),
-                        user: this.user ? {
-                            uid: this.user.uid,
-                            email: this.user.email
-                        } : null,
-                        sessionStorage: {
-                            authToken: !!sessionStorage.getItem('josaa_auth_token'),
-                            authVerified: localStorage.getItem('authVerified')
-                        }
-                    }, null, 2);
-                }
-                
-                if (usageDebug) {
-                    const todayKey = `josaa_usage_${this.user?.uid}_${new Date().toISOString().split('T')[0]}`;
-                    usageDebug.textContent = JSON.stringify({
-                        todayUsage: localStorage.getItem(todayKey),
-                        dailyLimit: window.UsageLimiter?.DAILY_LIMIT,
-                        unlimitedEmails: window.UsageLimiter?.UNLIMITED_EMAILS,
-                        localStorageKeys: Object.keys(localStorage).filter(key => key.startsWith('josaa_'))
-                    }, null, 2);
-                }
-            },
-            
-            showAuthError() {
-                document.getElementById('auth-loading').style.display = 'none';
-                document.getElementById('auth-error-container').style.display = 'block';
-                document.getElementById('auth-error-container').innerHTML = `
-                    <h2>Authentication Required</h2>
-                    <p>Please log in through the <a href="https://nextstepedu.co.in">NextStep</a> website to view your profile.</p>
-                    <p class="text-muted">If you were redirected here, please try accessing the main application first:</p>
-                    <div class="mt-3">
-                        <a href="./index.html" class="btn btn-primary me-2">Go to Generator</a>
-                        <a href="https://nextstepedu.co.in" class="btn btn-outline-primary">NextStep Home</a>
-                    </div>
-                `;
-            },
-            
-            showUsageError() {
-                document.getElementById('today-usage').textContent = 'Error';
-                document.getElementById('remaining-uses').textContent = 'Error';
-                document.getElementById('weekly-usage').textContent = 'Error';
-            }
-        };
-        
-        // Global functions for buttons
-        window.refreshUsageData = async function() {
-            const button = event.target;
-            const originalText = button.innerHTML;
-            button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Refreshing...';
-            button.disabled = true;
-            
-            try {
-                await ProfileManager.loadUsageData();
-                
-                // Show success message
-                const alertContainer = document.getElementById('error-alert-container');
-                alertContainer.innerHTML = `
-                    <div class="alert alert-success alert-dismissible fade show" role="alert">
-                        <i class="fas fa-check"></i> Profile data refreshed successfully!
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                `;
+
+                // Load usage history
+                loadUsageHistory();
             } catch (error) {
-                console.error('Error refreshing data:', error);
-                const alertContainer = document.getElementById('error-alert-container');
-                alertContainer.innerHTML = `
-                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        <i class="fas fa-exclamation-triangle"></i> Error refreshing data. Please try again.
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                console.error('Error loading usage data:', error);
+            }
+        }
+
+        // Calculate weekly usage
+        function calculateWeeklyUsage() {
+            if (!profileUser) return 0;
+            
+            let weeklyTotal = 0;
+            const today = new Date();
+            
+            for (let i = 0; i < 7; i++) {
+                const date = new Date(today);
+                date.setDate(today.getDate() - i);
+                const dateStr = date.toISOString().split('T')[0];
+                const storageKey = `josaa_usage_${profileUser.uid}_${dateStr}`;
+                weeklyTotal += parseInt(localStorage.getItem(storageKey) || '0');
+            }
+            
+            return weeklyTotal;
+        }
+
+        // Load usage history
+        function loadUsageHistory() {
+            const historyContainer = document.getElementById('usage-history');
+            
+            if (!profileUser) {
+                historyContainer.innerHTML = '<div style="text-align: center; color: #666; padding: 2rem;">No usage data available</div>';
+                return;
+            }
+
+            const history = [];
+            const today = new Date();
+            
+            // Get last 7 days
+            for (let i = 0; i < 7; i++) {
+                const date = new Date(today);
+                date.setDate(today.getDate() - i);
+                const dateStr = date.toISOString().split('T')[0];
+                const storageKey = `josaa_usage_${profileUser.uid}_${dateStr}`;
+                
+                const usage = parseInt(localStorage.getItem(storageKey) || '0');
+                
+                history.push({
+                    date: date.toLocaleDateString('en-US', { 
+                        weekday: 'short', 
+                        month: 'short', 
+                        day: 'numeric' 
+                    }),
+                    count: usage
+                });
+            }
+
+            if (history.every(day => day.count === 0)) {
+                historyContainer.innerHTML = '<div style="text-align: center; color: #666; padding: 2rem;"><i class="fas fa-info-circle"></i> No usage history yet</div>';
+            } else {
+                historyContainer.innerHTML = history.map(day => `
+                    <div class="usage-day">
+                        <span>${day.date}</span>
+                        <span style="padding: 0.25rem 0.5rem; background: ${day.count > 0 ? 'var(--primary-color)' : '#f8f9fa'}; color: ${day.count > 0 ? 'white' : '#666'}; border-radius: 12px; font-size: 0.8rem;">${day.count} uses</span>
                     </div>
-                `;
-            } finally {
-                button.innerHTML = originalText;
-                button.disabled = false;
+                `).join('');
+            }
+        }
+
+        // Show authentication error
+        function showAuthError() {
+            document.getElementById('auth-loading').style.display = 'none';
+            document.getElementById('auth-error-container').style.display = 'block';
+            document.getElementById('auth-error-container').innerHTML = `
+                <h2>Authentication Required</h2>
+                <p>Please log in through the NextStep website to view your profile.</p>
+                <div style="margin-top: 1rem;">
+                    <a href="index.html" class="btn btn-primary" style="margin-right: 0.5rem;">Go to Home</a>
+                    <a href="https://nextstepedu.co.in" class="btn btn-outline-primary">NextStep Website</a>
+                </div>
+            `;
+        }
+
+        // Button functions
+        window.refreshProfileData = async function() {
+            if (authReady) {
+                await loadProfileData();
+                updateSystemStatus();
+                showToast('Profile data refreshed!', 'success');
             }
         };
-        
+
         window.clearLocalData = function() {
-            if (confirm('Are you sure you want to clear your local usage data? This action cannot be undone.')) {
-                try {
-                    // Clear usage-related localStorage items
+            if (confirm('Clear all local usage data? This cannot be undone.')) {
+                if (profileUser) {
                     Object.keys(localStorage).forEach(key => {
-                        if (key.startsWith('josaa_usage_') || key.startsWith('devUsageCount')) {
+                        if (key.startsWith(`josaa_usage_${profileUser.uid}_`)) {
                             localStorage.removeItem(key);
                         }
                     });
-                    
-                    // Reload usage data
-                    ProfileManager.loadUsageData();
-                    
-                    const alertContainer = document.getElementById('error-alert-container');
-                    alertContainer.innerHTML = `
-                        <div class="alert alert-info alert-dismissible fade show" role="alert">
-                            <i class="fas fa-info"></i> Local usage data cleared successfully!
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                        </div>
-                    `;
-                } catch (error) {
-                    console.error('Error clearing data:', error);
-                    alert('Error clearing data. Please try again.');
+                    loadUsageData();
+                    showToast('Local data cleared!', 'info');
                 }
             }
         };
 
         window.exportUsageData = function() {
+            if (!profileUser) return;
+
+            const history = [];
+            const today = new Date();
+            
+            for (let i = 0; i < 30; i++) { // Export 30 days
+                const date = new Date(today);
+                date.setDate(today.getDate() - i);
+                const dateStr = date.toISOString().split('T')[0];
+                const storageKey = `josaa_usage_${profileUser.uid}_${dateStr}`;
+                const usage = parseInt(localStorage.getItem(storageKey) || '0');
+                
+                history.push({
+                    date: dateStr,
+                    usage: usage
+                });
+            }
+
+            const csvContent = "data:text/csv;charset=utf-8," 
+                + "Date,Usage\n"
+                + history.map(row => `${row.date},${row.usage}`).join("\n");
+            
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `usage_history_${new Date().toISOString().split('T')[0]}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            showToast('Usage data exported!', 'success');
+        };
+
+        window.toggleDebugSection = function() {
+            const debugSection = document.getElementById('debug-section');
+            const isVisible = debugSection.style.display !== 'none';
+            
+            if (isVisible) {
+                debugSection.style.display = 'none';
+            } else {
+                debugSection.style.display = 'block';
+                updateDebugInfo();
+            }
+        };
+
+        function updateDebugInfo() {
+            if (profileUser) {
+                document.getElementById('auth-debug').textContent = JSON.stringify({
+                    authenticated: !!profileUser,
+                    email: profileUser.email,
+                    uid: profileUser.uid.substring(0, 8) + '...',
+                    premium: window.Auth?.isPremium || false
+                }, null, 2);
+
+                const today = new Date().toISOString().split('T')[0];
+                const todayKey = `josaa_usage_${profileUser.uid}_${today}`;
+                document.getElementById('usage-debug').textContent = JSON.stringify({
+                    todayUsage: localStorage.getItem(todayKey) || '0',
+                    totalKeys: Object.keys(localStorage).filter(k => k.startsWith('josaa_usage_')).length,
+                    weeklyUsage: calculateWeeklyUsage()
+                }, null, 2);
+            }
+        }
+
+        // Simple toast notification
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${type === 'success' ? '#28a745' : type === 'error' ? '#dc3545' : '#007bff'};
+                color: white;
+                padding: 12px 20px;
+                border-radius: 4px;
+                z-index: 9999;
+                animation: slideIn 0.3s ease;
+            `;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log('Profile page loading...');
+            
+            // Add slide animation
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes slideIn {
+                    from { transform: translateX(100%); opacity: 0; }
+                    to { transform: translateX(0); opacity: 1; }
+                }
+            `;
+            document.head.appendChild(style);
+
             try {
-                const usageData = ProfileManager.getUsageHistory();
-                const csvContent = "data:text/csv;charset=utf-8," 
-                    + "Date,Usage Count\n"
-                    + usageData.map(day => `${day.date},${day.count}`).join("\n");
+                // Wait for auth system
+                await waitForAuth();
+                console.log('Auth system ready');
                 
-                const encodedUri = encodeURI(csvContent);
-                const link = document.createElement("a");
-                link.setAttribute("href", encodedUri);
-                link.setAttribute("download", `usage_history_${new Date().toISOString().split('T')[0]}.csv`);
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
+                // Update system status
+                updateSystemStatus();
                 
-                const alertContainer = document.getElementById('error-alert-container');
-                alertContainer.innerHTML = `
-                    <div class="alert alert-success alert-dismissible fade show" role="alert">
-                        <i class="fas fa-download"></i> Usage data exported successfully!
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                `;
-            } catch (error) {
-                console.error('Error exporting data:', error);
-                alert('Error exporting data. Please try again.');
-            }
-        };
-
-        window.toggleDebugInfo = function() {
-            const debugInfo = document.getElementById('debug-info');
-            const button = event.target;
-            
-            if (debugInfo.style.display === 'none') {
-                debugInfo.style.display = 'block';
-                button.innerHTML = '<i class="fas fa-eye-slash"></i> Hide Debug Info';
-                ProfileManager.debugMode = true;
-                ProfileManager.updateDebugInfo();
-            } else {
-                debugInfo.style.display = 'none';
-                button.innerHTML = '<i class="fas fa-eye"></i> Show Debug Info';
-                ProfileManager.debugMode = false;
-            }
-        };
-
-        // Initialize app - this will be called only after auth verification succeeds
-        window.initializeApp = async function() {
-            console.log('Profile app initialized after successful authentication');
-            
-            // Store login time
-            if (!sessionStorage.getItem('loginTime')) {
-                sessionStorage.setItem('loginTime', new Date().toISOString());
-            }
-            
-            // Hide loading overlay
-            document.getElementById('auth-loading').style.display = 'none';
-            
-            // Show main content
-            document.getElementById('main-content').style.display = 'block';
-            
-            // Initialize profile manager
-            const success = await ProfileManager.init();
-            
-            if (success) {
+                // Load profile
+                await loadProfileData();
+                
+                // Show main content
+                document.getElementById('auth-loading').style.display = 'none';
+                document.getElementById('main-content').style.display = 'block';
+                
                 console.log('Profile loaded successfully');
-            } else {
-                console.error('Failed to load profile');
-            }
-        };
-        
-        // Function to stop all processes if authentication fails
-        window.stopAllProcesses = function() {
-            console.log('Stopping all processes due to authentication failure');
-            ProfileManager.showAuthError();
-        };
-
-        // Add debug parameter functionality
-        document.addEventListener('DOMContentLoaded', function() {
-            const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.has('debug')) {
-                document.getElementById('debug-info').style.display = 'block';
+            } catch (error) {
+                console.error('Error loading profile:', error);
+                showAuthError();
             }
         });
+
+        // Debug mode check
+        if (new URLSearchParams(window.location.search).has('debug')) {
+            document.getElementById('debug-section').style.display = 'block';
+        }
     </script>
-
-    <!-- Authentication verification script -->
-    <script type="module" src="./static/js/auth-verification.js"></script>
-
-    <!-- Usage limiter scripts -->
-    <script type="module" src="./static/js/usage-limiter.js"></script>
-    <script type="module" src="./static/js/firestore-usage-tracker.js"></script>
 </body>
 </html>
