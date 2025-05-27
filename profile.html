@@ -432,9 +432,15 @@
         function waitForAuth() {
             return new Promise((resolve) => {
                 const checkAuth = () => {
-                    if (window.Auth && window.Auth.isLoggedIn !== undefined) {
+                    // Check multiple auth sources
+                    if (window.Auth && typeof window.Auth.isLoggedIn !== 'undefined') {
                         authReady = true;
+                        console.log('Auth ready via window.Auth, isLoggedIn:', window.Auth.isLoggedIn);
                         resolve(window.Auth);
+                    } else if (window.firebaseAuth && window.firebaseAuth.currentUser) {
+                        authReady = true;
+                        console.log('Auth ready via Firebase directly');
+                        resolve({ isLoggedIn: true, user: window.firebaseAuth.currentUser });
                     } else {
                         setTimeout(checkAuth, 100);
                     }
@@ -452,8 +458,14 @@
             const premiumStatus = document.getElementById('premium-status');
             const premiumStatusText = document.getElementById('premium-status-text');
 
-            // Authentication status
-            if (authReady && window.Auth && window.Auth.isLoggedIn) {
+            // Authentication status - check multiple sources
+            let isAuthenticated = false;
+            if ((window.Auth && window.Auth.isLoggedIn) || 
+                (window.firebaseAuth && window.firebaseAuth.currentUser)) {
+                isAuthenticated = true;
+            }
+
+            if (isAuthenticated) {
                 authStatus.className = 'status-indicator status-success';
                 authStatusText.textContent = 'Authentication: Connected';
             } else {
@@ -470,8 +482,14 @@
                 firebaseStatusText.textContent = 'Firebase: Loading...';
             }
 
-            // Premium status
-            const isPremium = window.Auth && window.Auth.isPremium;
+            // Premium status - check multiple sources
+            let isPremium = false;
+            if (window.Auth && window.Auth.isPremium) {
+                isPremium = window.Auth.isPremium;
+            } else if (window.SubscriptionManager && window.SubscriptionManager.isPremium) {
+                isPremium = window.SubscriptionManager.isPremium;
+            }
+
             if (isPremium) {
                 premiumStatus.className = 'status-indicator status-success';
                 premiumStatusText.textContent = 'Premium: Active';
@@ -483,25 +501,51 @@
 
         // Load profile data
         async function loadProfileData() {
-            if (!authReady || !window.Auth || !window.Auth.isLoggedIn) {
+            console.log('Loading profile data, authReady:', authReady);
+            
+            // Check authentication from multiple sources
+            let isAuthenticated = false;
+            let user = null;
+            
+            if (window.Auth && window.Auth.isLoggedIn && window.Auth.user) {
+                isAuthenticated = true;
+                user = window.Auth.user;
+                console.log('Using Auth service user');
+            } else if (window.firebaseAuth && window.firebaseAuth.currentUser) {
+                isAuthenticated = true;
+                user = window.firebaseAuth.currentUser;
+                console.log('Using Firebase auth user');
+            }
+            
+            console.log('Authentication check:', { isAuthenticated, hasUser: !!user });
+            
+            if (!isAuthenticated || !user) {
+                console.log('Not authenticated, showing auth error');
                 showAuthError();
                 return;
             }
 
-            profileUser = window.Auth.user;
+            profileUser = user;
             
             // Update basic profile info
-            document.getElementById('user-name').textContent = profileUser.displayName || profileUser.email.split('@')[0];
-            document.getElementById('user-email').textContent = profileUser.email;
-            document.getElementById('user-email-display').textContent = profileUser.email;
+            const displayName = user.displayName || user.email.split('@')[0];
+            document.getElementById('user-name').textContent = displayName;
+            document.getElementById('user-email').textContent = user.email;
+            document.getElementById('user-email-display').textContent = user.email;
             
             // Set avatar initial
             const avatar = document.getElementById('profile-avatar');
-            const userName = profileUser.displayName || profileUser.email.split('@')[0];
-            avatar.innerHTML = userName.charAt(0).toUpperCase();
+            avatar.innerHTML = displayName.charAt(0).toUpperCase();
 
-            // Check account type
-            const isPremium = window.Auth.isPremium;
+            // Check account type - look for premium status from multiple sources
+            let isPremium = false;
+            if (window.Auth && typeof window.Auth.isPremium !== 'undefined') {
+                isPremium = window.Auth.isPremium;
+            } else if (window.SubscriptionManager && typeof window.SubscriptionManager.isPremium !== 'undefined') {
+                isPremium = window.SubscriptionManager.isPremium;
+            }
+            
+            console.log('Premium status detected:', isPremium);
             setAccountType(isPremium);
 
             // Load usage data
@@ -541,8 +585,15 @@
                     // Calculate weekly usage
                     weeklyUsage = calculateWeeklyUsage();
                     
-                    // Check if premium
-                    const isPremium = window.Auth && window.Auth.isPremium;
+                    // Check if premium from multiple sources
+                    let isPremium = false;
+                    if (window.Auth && window.Auth.isPremium) {
+                        isPremium = window.Auth.isPremium;
+                    } else if (window.SubscriptionManager && window.SubscriptionManager.isPremium) {
+                        isPremium = window.SubscriptionManager.isPremium;
+                    }
+                    
+                    console.log('Premium status for usage calculation:', isPremium);
                     remainingUses = isPremium ? Infinity : Math.max(0, 5 - todayUsage);
                 }
 
@@ -779,12 +830,22 @@
             document.head.appendChild(style);
 
             try {
-                // Wait for auth system
-                await waitForAuth();
-                console.log('Auth system ready');
+                // Wait for auth system with timeout
+                console.log('Waiting for auth system...');
+                
+                const authPromise = waitForAuth();
+                const timeoutPromise = new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error('Auth timeout')), 10000)
+                );
+                
+                await Promise.race([authPromise, timeoutPromise]);
+                console.log('Auth system ready, proceeding...');
                 
                 // Update system status
                 updateSystemStatus();
+                
+                // Small delay to ensure all systems are ready
+                await new Promise(resolve => setTimeout(resolve, 500));
                 
                 // Load profile
                 await loadProfileData();
@@ -794,9 +855,24 @@
                 document.getElementById('main-content').style.display = 'block';
                 
                 console.log('Profile loaded successfully');
+                
+                // Update system status again after everything is loaded
+                setTimeout(updateSystemStatus, 1000);
+                
             } catch (error) {
                 console.error('Error loading profile:', error);
-                showAuthError();
+                
+                // Try one more time with direct Firebase check
+                if (window.firebaseAuth && window.firebaseAuth.currentUser) {
+                    console.log('Fallback: Using direct Firebase auth');
+                    authReady = true;
+                    updateSystemStatus();
+                    await loadProfileData();
+                    document.getElementById('auth-loading').style.display = 'none';
+                    document.getElementById('main-content').style.display = 'block';
+                } else {
+                    showAuthError();
+                }
             }
         });
 
