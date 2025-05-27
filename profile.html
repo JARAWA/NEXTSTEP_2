@@ -39,11 +39,220 @@
     
     <!-- Profile-specific styles -->
     <style>
-        :root {
-            --primary-color: #d4af37;
-            --primary-dark: #b8941f;
-            --secondary-color: #f8f9fa;
-            --success-color: #28a745;
+        .profile-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            color: white;
+            border-radius: 15px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 20px rgba(212, 175, 55, 0.3);
+            text-align: center;
+        }
+        
+        .profile-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: var(--secondary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin: 0 auto 1rem;
+        }
+        
+        .stats-card {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 5px 20px rgba(212, 175, 55, 0.15);
+            border: 1px solid rgba(212, 175, 55, 0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .stats-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .stat-icon {
+            font-size: 2rem;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        
+        .account-badge {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            border-radius: 25px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            margin-top: 0.5rem;
+        }
+        
+        .unlimited-account {
+            background: linear-gradient(45deg, #d1e7dd, #a3d9a4);
+            color: #0f5132;
+        }
+        
+        .limited-account {
+            background: linear-gradient(45deg, #fff3cd, #ffeaa7);
+            color: #664d03;
+        }
+        
+        .usage-history {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .usage-day {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .usage-day:last-child {
+            border-bottom: none;
+        }
+        
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1050;
+        }
+
+        .auth-error {
+            display: none;
+            font-family: 'Poppins', sans-serif;
+            max-width: 500px;
+            margin: 100px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .auth-error h2 {
+            color: #e53935;
+            margin-bottom: 20px;
+        }
+        
+        .auth-error a {
+            color: #1e88e5;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .system-status {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: #dc3545;
+        }
+
+        .status-success { background-color: #28a745; }
+        .status-warning { background-color: #ffc107; }
+        .status-error { background-color: #dc3545; }
+
+        .navigation-header {
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+            border-radius: 8px;
+            padding: 1rem;
+        }
+
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .back-button:hover {
+            color: var(--primary-dark);
+            transform: translateX(-2px);
+        }
+
+        .profile-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .btn-outline-primary {
+            background: transparent;
+            color: var(--primary-color);
+            border: 2px solid var(--primary-color);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
         
         .profile-header {
@@ -586,13 +795,13 @@
         function checkPremiumStatus(userData, userEmail) {
             console.log('🔍 Starting premium status check...');
             
-            // Method 1: Check unlimited emails first (highest priority)
+            // Method 1: Check unlimited emails first (highest priority - ONLY these get unlimited usage)
             if (checkUnlimitedAccess(userEmail)) {
                 console.log('💎 Unlimited access granted for email:', userEmail);
                 return { isPremium: true, isUnlimited: true, reason: 'unlimited_email' };
             }
             
-            // Method 2: Check Firestore subscription data
+            // Method 2: Check Firestore subscription data (Premium features but NOT unlimited usage)
             if (userData && userData.subscription) {
                 const subscription = userData.subscription;
                 const now = new Date();
@@ -613,7 +822,7 @@
                 }
             }
             
-            // Method 3: Check Auth/SubscriptionManager (fallback)
+            // Method 3: Check Auth/SubscriptionManager (fallback - Premium features but NOT unlimited usage)
             if (window.Auth && typeof window.Auth.isPremium === 'boolean' && window.Auth.isPremium) {
                 console.log('🔄 Premium status from Auth.isPremium:', true);
                 return { isPremium: true, isUnlimited: false, reason: 'auth_service' };
@@ -624,7 +833,7 @@
                 return { isPremium: true, isUnlimited: false, reason: 'subscription_manager' };
             }
             
-            // Method 4: Check AuthVerification (fallback)
+            // Method 4: Check AuthVerification (fallback - Premium features but NOT unlimited usage)
             if (window.AuthVerification && window.AuthVerification.isPremium) {
                 console.log('🔄 Premium status from AuthVerification.isPremium:', true);
                 return { isPremium: true, isUnlimited: false, reason: 'auth_verification' };
@@ -961,9 +1170,9 @@
                 if (premiumData.isUnlimited) {
                     typeText.innerHTML = '<span style="color: var(--success-color);"><i class="fas fa-infinity"></i> Unlimited (Special)</span>';
                 } else if (premiumData.isPremium) {
-                    typeText.innerHTML = '<span style="color: var(--success-color);"><i class="fas fa-star"></i> Premium (Unlimited)</span>';
+                    typeText.innerHTML = '<span style="color: var(--success-color);"><i class="fas fa-star"></i> Premium (5/day limit)</span>';
                 } else {
-                    typeText.innerHTML = '<span style="color: #ffc107;"><i class="fas fa-user"></i> Standard (Limited)</span>';
+                    typeText.innerHTML = '<span style="color: #ffc107;"><i class="fas fa-user"></i> Standard (5/day limit)</span>';
                 }
             }
 
@@ -1024,9 +1233,11 @@
                 weeklyUsage = calculateWeeklyUsage();
                 
                 // Calculate remaining uses based on premium status
-                if (premiumData.isUnlimited || premiumData.isPremium) {
+                // IMPORTANT: Only UNLIMITED_EMAILS get infinite usage, premium users still have daily limits
+                if (premiumData.isUnlimited) {
                     remainingUses = Infinity;
                 } else {
+                    // Both premium and standard users have the same daily limit
                     remainingUses = Math.max(0, DAILY_LIMIT - todayUsage);
                 }
                 
@@ -1034,7 +1245,8 @@
                     todayUsage,
                     weeklyUsage,
                     remainingUses: remainingUses === Infinity ? '∞' : remainingUses,
-                    premiumData
+                    premiumData,
+                    note: 'Premium users still have 5/day limit - only UNLIMITED_EMAILS get infinite usage'
                 });
 
                 // Update display
@@ -1233,7 +1445,8 @@
                     email: profileUser.email,
                     uid: profileUser.uid.substring(0, 8) + '...',
                     isUnlimited: checkUnlimitedAccess(profileUser.email),
-                    premium: window.Auth?.isPremium || false
+                    premium: window.Auth?.isPremium || false,
+                    note: 'Only unlimited emails get infinite usage, premium users still have 5/day limit'
                 }, null, 2);
 
                 const today = new Date().toISOString().split('T')[0];
@@ -1243,7 +1456,9 @@
                     totalKeys: Object.keys(localStorage).filter(k => k.startsWith('josaa_usage_')).length,
                     weeklyUsage: calculateWeeklyUsage(),
                     unlimitedEmails: UNLIMITED_EMAILS,
-                    isInUnlimitedList: checkUnlimitedAccess(profileUser.email)
+                    isInUnlimitedList: checkUnlimitedAccess(profileUser.email),
+                    dailyLimit: DAILY_LIMIT,
+                    logic: 'Premium ≠ Unlimited. Only special emails get unlimited usage.'
                 }, null, 2);
             }
         }
