@@ -1,0 +1,33 @@
+services:
+  # Your existing frontend service
+  - type: web
+    name: nextstep-frontend
+    env: static
+    buildCommand: npm install
+    staticPublishPath: .
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: NODE_ENV
+        value: production
+
+  # New backend service
+  - type: web
+    name: nextstep-backend
+    env: node
+    region: singapore
+    buildCommand: cd backend && npm install
+    startCommand: cd backend && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: RAZORPAY_KEY_ID
+        sync: false
+      - key: RAZORPAY_KEY_SECRET
+        sync: false
+      - key: RAZORPAY_WEBHOOK_SECRET
+        sync: false
+      - key: FIREBASE_SERVICE_ACCOUNT
+        sync: false
