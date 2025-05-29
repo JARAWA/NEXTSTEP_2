@@ -362,14 +362,13 @@ class SubscriptionManager {
     /**
      * Handle plan selection and initiate payment
      */
-    static async selectPlan(planKey) {
-        const manager = window.SubscriptionManager;
-        if (!manager || !manager.currentUser) {
-            alert('Please log in to continue');
-            return;
-        }
-        
-        const plan = manager.subscriptionPlans[planKey];
+    async selectPlan(planKey) {
+        if (!this.currentUser) {
+    alert('Please log in to continue');
+    return;
+}
+
+const plan = this.subscriptionPlans[planKey];
         if (!plan) {
             console.error('Invalid plan selected');
             return;
@@ -385,7 +384,7 @@ class SubscriptionManager {
             }
             
             // Call your backend API to create order
-            const response = await fetch(`${manager.BACKEND_URL}/api/create-order`, {
+            const response = await fetch(`${this.BACKEND_URL}/api/create-order`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -407,7 +406,7 @@ class SubscriptionManager {
             console.log('Order created:', result);
             
             // Initialize Razorpay payment with the order ID from server
-            manager.initiateRazorpayPayment(plan, result.orderId);
+            this.initiateRazorpayPayment(plan, result.orderId);
             
         } catch (error) {
             console.error('Error creating order:', error);
