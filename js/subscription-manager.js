@@ -1,7 +1,7 @@
 /**
  * subscription-manager.js
  * 
- * Standalone script to handle premium subscription functionality
+ * Enhanced subscription management with Razorpay payment integration
  */
 import { 
     getAuth, 
@@ -21,13 +21,41 @@ class SubscriptionManager {
         this.db = getFirestore();
         this.currentUser = null;
         this.isPremium = false;
-        this._isShowingModal = false; // Track when we're explicitly showing the modal
-        this.subscriptionCodes = {
-            // Pre-defined subscription codes
-            // Production version would store and verify these securely on the server
-            "NEXTSTEP2025": { valid: true, duration: 365 }, // 1 year
-            "PREMIUM2MONTH": { valid: true, duration: 60 },  // 2 months
-            "TRYNEXTSTEP": { valid: true, duration: 7 }      // 1 week trial
+        this._isShowingModal = false;
+        
+        // Backend API URL - UPDATE THIS WITH YOUR ACTUAL RENDER BACKEND URL
+        this.BACKEND_URL = 'https://nextstep-backend.onrender.com';
+        // For local testing: this.BACKEND_URL = 'http://localhost:5000';
+        
+        // Razorpay configuration
+        this.razorpayKeyId = 'rzp_live_GgEM5tXGq55aA0';
+        
+        // Subscription plans
+        this.subscriptionPlans = {
+            monthly: {
+                id: 'plan_monthly',
+                name: '1 Month Premium',
+                amount: 999, // Amount in paise (₹9.99)
+                currency: 'INR',
+                duration: 30
+            },
+            quarterly: {
+                id: 'plan_quarterly',
+                name: '3 Months Premium',
+                amount: 2499, // ₹24.99
+                currency: 'INR',
+                duration: 90,
+                discount: '17% off'
+            },
+            yearly: {
+                id: 'plan_yearly',
+                name: '1 Year Premium',
+                amount: 7999, // ₹79.99
+                currency: 'INR',
+                duration: 365,
+                discount: '33% off',
+                popular: true
+            }
         };
         
         // Initialize
@@ -38,7 +66,10 @@ class SubscriptionManager {
      * Initialize the subscription manager
      */
     init() {
-        console.log('🔄 Subscription Manager initializing...');
+        console.log('🔄 Subscription Manager with Razorpay initializing...');
+        
+        // Load Razorpay SDK
+        this.loadRazorpaySDK();
         
         // Ensure modal is hidden at startup
         this._ensureModalHidden();
@@ -53,6 +84,23 @@ class SubscriptionManager {
         }
         
         console.log('✅ Subscription Manager initialized');
+    }
+    
+    /**
+     * Load Razorpay SDK dynamically
+     */
+    loadRazorpaySDK() {
+        if (document.getElementById('razorpay-sdk')) return;
+        
+        const script = document.createElement('script');
+        script.id = 'razorpay-sdk';
+        script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+        script.async = true;
+        document.head.appendChild(script);
+        
+        script.onload = () => {
+            console.log('✅ Razorpay SDK loaded');
+        };
     }
     
     /**
@@ -94,6 +142,9 @@ class SubscriptionManager {
     setupEventListeners() {
         console.log('🔄 Setting up subscription event listeners');
         
+        // Update modal content to show plans instead of code input
+        this.updateModalContent();
+        
         // Ensure modal exists before setting up events
         const modal = document.getElementById('subscriptionModal');
         if (!modal) {
@@ -112,8 +163,6 @@ class SubscriptionManager {
                 console.log('❌ Close button clicked');
                 this.hideSubscriptionModal();
             });
-        } else {
-            console.warn('⚠️ Close subscription modal button not found');
         }
         
         // Close modal when clicking outside
@@ -124,32 +173,354 @@ class SubscriptionManager {
             }
         });
         
-        // Activate subscription button
-        const activateButton = document.getElementById('activate-subscription');
-        if (activateButton) {
-            activateButton.addEventListener('click', () => {
-                this.verifySubscriptionCode();
-            });
-        } else {
-            console.warn('⚠️ Activate subscription button not found');
-        }
-        
-        // Listen for Enter key in subscription input
-        const codeInput = document.getElementById('subscription-code');
-        if (codeInput) {
-            codeInput.addEventListener('keyup', (event) => {
-                if (event.key === 'Enter') {
-                    this.verifySubscriptionCode();
-                }
-            });
-        } else {
-            console.warn('⚠️ Subscription code input not found');
-        }
-        
         // Update all premium-required buttons
         this.updatePremiumButtons();
         
         console.log('✅ Subscription event listeners setup complete');
+    }
+    
+    /**
+     * Update modal content to show subscription plans
+     */
+    updateModalContent() {
+        const modalContent = document.querySelector('.subscription-content');
+        if (!modalContent) return;
+        
+        modalContent.innerHTML = `
+            <h2>Choose Your Premium Plan</h2>
+            <p>Unlock all features and get the best college recommendations</p>
+            
+            <div class="subscription-plans">
+                ${Object.entries(this.subscriptionPlans).map(([key, plan]) => `
+                    <div class="plan-card ${plan.popular ? 'popular' : ''}" data-plan="${key}">
+                        ${plan.popular ? '<div class="popular-badge">Most Popular</div>' : ''}
+                        ${plan.discount ? `<div class="discount-badge">${plan.discount}</div>` : ''}
+                        <h3>${plan.name}</h3>
+                        <div class="plan-price">
+                            <span class="currency">₹</span>
+                            <span class="amount">${(plan.amount / 100).toFixed(2)}</span>
+                        </div>
+                        <ul class="plan-features">
+                            <li>✓ Access to all preference list generators</li>
+                            <li>✓ Advanced analytics and insights</li>
+                            <li>✓ Priority support</li>
+                            <li>✓ Regular updates</li>
+                        </ul>
+                        <button class="btn btn-primary select-plan-btn" onclick="SubscriptionManager.selectPlan('${key}')">
+                            Select Plan
+                        </button>
+                    </div>
+                `).join('')}
+            </div>
+            
+            <div class="secure-payment-info">
+                <i class="fas fa-lock"></i>
+                <span>Secure payment powered by Razorpay</span>
+            </div>
+            
+            <style>
+                .subscription-plans {
+                    display: flex;
+                    gap: 20px;
+                    margin: 30px 0;
+                    flex-wrap: wrap;
+                    justify-content: center;
+                }
+                
+                .plan-card {
+                    flex: 1;
+                    min-width: 200px;
+                    max-width: 300px;
+                    padding: 20px;
+                    border: 2px solid #e0e0e0;
+                    border-radius: 10px;
+                    text-align: center;
+                    position: relative;
+                    transition: all 0.3s ease;
+                }
+                
+                .plan-card:hover {
+                    transform: translateY(-5px);
+                    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+                }
+                
+                .plan-card.popular {
+                    border-color: var(--primary-color, #006B6B);
+                    transform: scale(1.05);
+                }
+                
+                .popular-badge {
+                    position: absolute;
+                    top: -12px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    background: var(--primary-color, #006B6B);
+                    color: white;
+                    padding: 4px 16px;
+                    border-radius: 20px;
+                    font-size: 12px;
+                    font-weight: bold;
+                }
+                
+                .discount-badge {
+                    position: absolute;
+                    top: 10px;
+                    right: 10px;
+                    background: #ff6b6b;
+                    color: white;
+                    padding: 4px 8px;
+                    border-radius: 5px;
+                    font-size: 11px;
+                    font-weight: bold;
+                }
+                
+                .plan-price {
+                    margin: 20px 0;
+                    font-size: 36px;
+                    font-weight: bold;
+                    color: var(--primary-color, #006B6B);
+                }
+                
+                .plan-price .currency {
+                    font-size: 20px;
+                    vertical-align: super;
+                }
+                
+                .plan-features {
+                    list-style: none;
+                    padding: 0;
+                    margin: 20px 0;
+                    text-align: left;
+                }
+                
+                .plan-features li {
+                    padding: 5px 0;
+                    color: #666;
+                }
+                
+                .select-plan-btn {
+                    width: 100%;
+                    padding: 12px;
+                    margin-top: 20px;
+                }
+                
+                .select-plan-btn.loading {
+                    position: relative;
+                    color: transparent;
+                }
+                
+                .select-plan-btn.loading::after {
+                    content: "";
+                    position: absolute;
+                    width: 16px;
+                    height: 16px;
+                    top: 50%;
+                    left: 50%;
+                    margin-left: -8px;
+                    margin-top: -8px;
+                    border: 2px solid #f3f3f3;
+                    border-radius: 50%;
+                    border-top: 2px solid #006B6B;
+                    animation: spin 1s linear infinite;
+                }
+                
+                @keyframes spin {
+                    0% { transform: rotate(0deg); }
+                    100% { transform: rotate(360deg); }
+                }
+                
+                .secure-payment-info {
+                    text-align: center;
+                    margin-top: 30px;
+                    color: #666;
+                    font-size: 14px;
+                }
+                
+                .secure-payment-info i {
+                    color: #27ae60;
+                    margin-right: 5px;
+                }
+                
+                @media (max-width: 768px) {
+                    .subscription-plans {
+                        flex-direction: column;
+                    }
+                    
+                    .plan-card {
+                        max-width: 100%;
+                        margin-bottom: 20px;
+                    }
+                    
+                    .plan-card.popular {
+                        transform: none;
+                    }
+                }
+            </style>
+        `;
+    }
+    
+    /**
+     * Handle plan selection and initiate payment
+     */
+    static async selectPlan(planKey) {
+        const manager = window.SubscriptionManager;
+        if (!manager || !manager.currentUser) {
+            alert('Please log in to continue');
+            return;
+        }
+        
+        const plan = manager.subscriptionPlans[planKey];
+        if (!plan) {
+            console.error('Invalid plan selected');
+            return;
+        }
+        
+        try {
+            // Show loading state on button
+            const button = event.target;
+            if (button) {
+                button.classList.add('loading');
+                button.disabled = true;
+                button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+            }
+            
+            // Call your backend API to create order
+            const response = await fetch(`${manager.BACKEND_URL}/api/create-order`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    userId: manager.currentUser.uid,
+                    userEmail: manager.currentUser.email,
+                    planId: plan.id,
+                    amount: plan.amount,
+                    currency: plan.currency
+                })
+            });
+            
+            if (!response.ok) {
+                throw new Error('Failed to create order');
+            }
+            
+            const result = await response.json();
+            console.log('Order created:', result);
+            
+            // Initialize Razorpay payment with the order ID from server
+            manager.initiateRazorpayPayment(plan, result.orderId);
+            
+        } catch (error) {
+            console.error('Error creating order:', error);
+            alert('Error processing your request. Please try again.');
+        } finally {
+            // Reset button state
+            if (event.target) {
+                const button = event.target;
+                button.classList.remove('loading');
+                button.disabled = false;
+                button.innerHTML = 'Select Plan';
+            }
+        }
+    }
+    
+    /**
+     * Initialize Razorpay payment
+     */
+    initiateRazorpayPayment(plan, orderId) {
+        const options = {
+            key: this.razorpayKeyId,
+            amount: plan.amount,
+            currency: plan.currency,
+            name: 'NextStep Premium',
+            description: plan.name,
+            order_id: orderId,
+            prefill: {
+                name: this.currentUser.displayName || '',
+                email: this.currentUser.email,
+                contact: '' // Add if you have user's phone number
+            },
+            theme: {
+                color: '#006B6B'
+            },
+            handler: async (response) => {
+                // Payment successful - send to backend for verification
+                await this.handlePaymentSuccess(response, plan, orderId);
+            },
+            modal: {
+                ondismiss: () => {
+                    console.log('Payment cancelled by user');
+                }
+            }
+        };
+        
+        // Check if Razorpay is loaded
+        if (typeof Razorpay === 'undefined') {
+            alert('Payment system is loading. Please try again in a moment.');
+            return;
+        }
+        
+        const razorpay = new Razorpay(options);
+        razorpay.open();
+    }
+    
+    /**
+     * Handle successful payment
+     */
+    async handlePaymentSuccess(response, plan, orderId) {
+        console.log('Payment successful:', response);
+        
+        try {
+            // Show processing message
+            if (window.showToast) {
+                window.showToast('Verifying payment...', 'info');
+            }
+            
+            // Call backend to verify payment
+            const verifyResponse = await fetch(`${this.BACKEND_URL}/api/verify-payment`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    orderId: orderId,
+                    paymentId: response.razorpay_payment_id,
+                    signature: response.razorpay_signature,
+                    userId: this.currentUser.uid
+                })
+            });
+            
+            if (!verifyResponse.ok) {
+                throw new Error('Payment verification failed');
+            }
+            
+            const result = await verifyResponse.json();
+            
+            if (result.success) {
+                // Update local state
+                this.isPremium = true;
+                this.updatePremiumUI();
+                
+                // Hide modal and show success
+                this.hideSubscriptionModal();
+                
+                if (window.showToast) {
+                    window.showToast('Premium subscription activated successfully!', 'success');
+                } else {
+                    alert('Premium subscription activated successfully!');
+                }
+                
+                // Refresh page after a short delay
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1500);
+            } else {
+                throw new Error(result.error || 'Payment verification failed');
+            }
+            
+        } catch (error) {
+            console.error('Error verifying payment:', error);
+            alert('Payment verification failed. Please contact support with payment ID: ' + response.razorpay_payment_id);
+        }
     }
     
     /**
@@ -158,7 +529,7 @@ class SubscriptionManager {
     updatePremiumButtons() {
         console.log('🔄 Updating premium buttons, isPremium:', this.isPremium);
         
-        // Update button styling for all premium buttons regardless of coordinator
+        // Update button styling for all premium buttons
         document.querySelectorAll('[data-requires-premium="true"]').forEach(button => {
             button.classList.toggle('premium-active', this.isPremium);
         });
@@ -174,62 +545,7 @@ class SubscriptionManager {
                 return true;
             });
             console.log('✅ Premium handler registered with ButtonHandlerCoordinator');
-            return; // Skip the original handler setup
-        }   
-        
-        // Find all buttons that require premium access
-        document.querySelectorAll('[data-requires-premium="true"]').forEach(button => {
-            // Update button styling
-            button.classList.toggle('premium-active', this.isPremium);
-            
-            // Store the original click event if any
-            const originalOnClick = button.onclick;
-            
-            // Replace with our premium check
-            button.onclick = (event) => {
-                event.preventDefault();
-                console.log('🔘 Premium button clicked, current premium status:', this.isPremium);
-                
-                // First check if user is logged in
-                if (!this.currentUser) {
-                    console.log('👤 User not logged in, showing login modal');
-                    if (window.Modal && typeof window.Modal.show === 'function') {
-                        window.Modal.show();
-                    } else {
-                        alert('Please log in to continue.');
-                    }
-                    return;
-                }
-                
-                // Then do a fresh check of premium status before proceeding
-                this.checkPremiumStatus().then(isPremium => {
-                    console.log('🔄 Fresh premium check in button handler:', isPremium);
-                    
-                    if (isPremium) {
-                        console.log('✅ User has premium, proceeding with action');
-                        // If premium, proceed with original action
-                        if (originalOnClick) {
-                            originalOnClick.call(button, event);
-                        }
-                        
-                        // Handle href navigation if present
-                        const targetUrl = button.getAttribute('href') || button.dataset.href;
-                        if (targetUrl) {
-                            console.log('🔄 Navigating to:', targetUrl);
-                            if (button.getAttribute('target') === '_blank') {
-                                window.open(targetUrl, '_blank');
-                            } else {
-                                window.location.href = targetUrl;
-                            }
-                        }
-                    } else {
-                        console.log('⚠️ User does not have premium, showing subscription modal');
-                        // If not premium, show subscription modal
-                        this.showSubscriptionModal();
-                    }
-                });
-            };
-        });
+        }
     }
     
     /**
@@ -259,11 +575,10 @@ class SubscriptionManager {
                     this.isPremium = expiryDate > now && userData.subscription.isActive;
                     console.log(`✅ Premium status: ${this.isPremium ? 'Active' : 'Inactive'}, Expiry: ${expiryDate.toLocaleDateString()}`);
                     
-                    // If subscription has expired, update the premium status in Firestore
+                    // If subscription has expired, update the status
                     if (!this.isPremium && userData.subscription.isActive) {
                         await this.updateSubscriptionStatus({
-                            isActive: false,
-                            expiryDate: userData.subscription.expiryDate
+                            isActive: false
                         });
                     }
                 } else {
@@ -304,26 +619,18 @@ class SubscriptionManager {
     /**
      * Update user's subscription status in Firestore
      */
-    async updateSubscriptionStatus(subscriptionData) {
+    async updateSubscriptionStatus(updates) {
         if (!this.currentUser) return false;
         
         try {
-            console.log('🔄 Updating subscription status in Firestore');
             const userRef = doc(this.db, "users", this.currentUser.uid);
             
             await updateDoc(userRef, {
-                subscription: {
-                    ...subscriptionData,
-                    updatedAt: new Date().toISOString()
-                }
+                'subscription.isActive': updates.isActive,
+                'subscription.updatedAt': new Date().toISOString()
             });
             
-            this.isPremium = subscriptionData.isActive;
-            console.log('✅ Subscription status updated successfully');
-            
-            // Update UI
-            this.updatePremiumUI();
-            
+            console.log('✅ Subscription status updated');
             return true;
         } catch (error) {
             console.error("❌ Error updating subscription status:", error);
@@ -332,119 +639,12 @@ class SubscriptionManager {
     }
     
     /**
-     * Verify subscription code and activate premium if valid
-     */
-    async verifySubscriptionCode() {
-        const codeInput = document.getElementById('subscription-code');
-        const errorElement = document.getElementById('subscription-code-error');
-        
-        // Clear previous error
-        if (errorElement) {
-            errorElement.textContent = '';
-            errorElement.style.display = 'none';
-        }
-        
-        // First check if user already has premium
-        if (this.isPremium) {
-            console.log('👑 User already has active premium subscription');
-            
-            if (errorElement) {
-                errorElement.textContent = 'You already have an active premium subscription!';
-                errorElement.style.display = 'block';
-                errorElement.style.color = '#3498db'; // Blue for information
-            } else {
-                alert('You already have an active premium subscription!');
-            }
-            
-            // Close modal after delay
-            setTimeout(() => {
-                this.hideSubscriptionModal();
-            }, 2000);
-            
-            return;
-        }
-        
-        if (!codeInput) return;
-        const code = codeInput.value.trim();
-        
-        if (!code) {
-            if (errorElement) {
-                errorElement.textContent = 'Please enter a subscription code';
-                errorElement.style.display = 'block';
-            }
-            return;
-        }
-        
-        console.log('🔄 Verifying subscription code:', code);
-        
-        // Check if code is valid
-        const subscriptionInfo = this.subscriptionCodes[code];
-        
-        if (!subscriptionInfo || !subscriptionInfo.valid) {
-            console.log('❌ Invalid subscription code');
-            if (errorElement) {
-                errorElement.textContent = 'Invalid subscription code. Please try again.';
-                errorElement.style.display = 'block';
-            }
-            return;
-        }
-        
-        try {
-            // Calculate expiry date
-            const now = new Date();
-            const expiryDate = new Date(now);
-            expiryDate.setDate(now.getDate() + subscriptionInfo.duration);
-            
-            console.log('🔄 Activating subscription with expiry:', expiryDate.toLocaleDateString());
-            
-            // Update subscription in Firestore
-            const updated = await this.updateSubscriptionStatus({
-                isActive: true,
-                activatedAt: now.toISOString(),
-                expiryDate: expiryDate.toISOString(),
-                duration: subscriptionInfo.duration,
-                code: code
-            });
-            
-            if (updated) {
-                console.log('✅ Premium subscription activated successfully!');
-                // Show success message and hide modal
-                if (window.showToast) {
-                    window.showToast('Premium subscription activated successfully!', 'success');
-                } else {
-                    alert('Premium subscription activated successfully!');
-                }
-                
-                this.hideSubscriptionModal();
-                
-                // Refresh the page to reflect premium status
-                setTimeout(() => {
-                    window.location.reload();
-                }, 1500);
-            } else {
-                console.log('❌ Error activating subscription');
-                if (errorElement) {
-                    errorElement.textContent = 'Error activating subscription. Please try again.';
-                    errorElement.style.display = 'block';
-                }
-            }
-        } catch (error) {
-            console.error("❌ Error verifying subscription code:", error);
-            if (errorElement) {
-                errorElement.textContent = 'Server error. Please try again later.';
-                errorElement.style.display = 'block';
-            }
-        }
-    }
-    
-    /**
-     * Show subscription modal - FIXED to properly check premium status first
+     * Show subscription modal
      */
     async showSubscriptionModal() {
         console.log('🔄 showSubscriptionModal called, checking premium status');
         
         try {
-            // Track that we're explicitly showing the modal
             this._isShowingModal = true;
             
             // Always do a fresh check of premium status before showing modal
@@ -457,18 +657,11 @@ class SubscriptionManager {
                 if (modal) {
                     console.log('🔄 Showing subscription modal');
                     modal.style.display = 'block';
-                    
-                    // Focus the input field
-                    setTimeout(() => {
-                        const codeInput = document.getElementById('subscription-code');
-                        if (codeInput) codeInput.focus();
-                    }, 300);
                 } else {
                     console.error('❌ Subscription modal not found in DOM');
                 }
             } else {
                 console.log('👑 User already has premium, not showing modal');
-                // User already has premium, show message instead
                 if (window.showToast) {
                     window.showToast('You already have an active premium subscription!', 'info');
                 } else {
@@ -478,7 +671,6 @@ class SubscriptionManager {
         } catch (error) {
             console.error('❌ Error in showSubscriptionModal:', error);
         } finally {
-            // Clear the flag after a delay
             setTimeout(() => {
                 this._isShowingModal = false;
             }, 200);
@@ -493,15 +685,11 @@ class SubscriptionManager {
         const modal = document.getElementById('subscriptionModal');
         if (modal) {
             modal.style.display = 'none';
-        } else {
-            console.warn('⚠️ Cannot hide subscription modal - element not found');
         }
     }
     
     /**
      * Check if a feature requires premium and show modal if necessary
-     * @param {Function} callback - Function to execute if premium access is confirmed
-     * @returns {boolean} Whether the user has premium access
      */
     async checkPremiumAccess(callback) {
         console.log('🔄 Checking premium access');
@@ -521,14 +709,6 @@ class SubscriptionManager {
             return false;
         }
     }
-    
-    /**
-     * Check if modal is currently being explicitly shown
-     * @returns {boolean} Whether modal is being shown explicitly
-     */
-    isExplicitlyShowingModal() {
-        return this._isShowingModal;
-    }
 }
 
 // Initialize subscription manager
@@ -545,7 +725,7 @@ function initSubscriptionManager() {
         // Expose to global scope for access from other scripts
         window.SubscriptionManager = subscriptionManager;
         
-        console.log('✅ Subscription Manager initialized and exposed globally');
+        console.log('✅ Subscription Manager with Razorpay initialized and exposed globally');
     } else {
         console.log('⚠️ SubscriptionManager already exists, reusing instance');
     }
