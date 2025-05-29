@@ -201,7 +201,7 @@ class SubscriptionManager {
                         </ul>
                     </div>
                     
-                    <button class="btn btn-primary select-plan-btn" onclick="window.SubscriptionManager.selectPlan('premium')">
+                    <button class="btn btn-primary select-plan-btn" onclick="window.SubscriptionManager.selectPlan('premium', event)">
                         <i class="fas fa-crown"></i> Get Premium Access
                     </button>
                     
@@ -400,7 +400,7 @@ class SubscriptionManager {
     /**
      * Handle plan selection and initiate payment
      */
-    async selectPlan(planKey) {
+    async selectPlan(planKey, event) {
         if (!this.currentUser) {
             alert('Please log in to continue');
             return;
