@@ -129,9 +129,8 @@ app.post('/api/verify-payment', async (req, res) => {
     const expiryDate = new Date(now);
     
     // Determine duration based on amount
-    let duration = 30; // Default 30 days
-    if (orderData.amount === 2499) duration = 90;
-    else if (orderData.amount === 7999) duration = 365;
+    let duration = 60; // 60 days for ₹100 plan
+if (orderData.amount === 10000) duration = 60; // ₹100 = 10000 paise
     
     expiryDate.setDate(now.getDate() + duration);
 
