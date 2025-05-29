@@ -30,31 +30,22 @@ class SubscriptionManager {
         // Razorpay configuration
         this.razorpayKeyId = 'rzp_live_GgEM5tXGq55aA0';
         
-        // Subscription plans
+        // Subscription plan - Single plan
         this.subscriptionPlans = {
-            monthly: {
-                id: 'plan_monthly',
-                name: '1 Month Premium',
-                amount: 999, // Amount in paise (₹9.99)
+            premium: {
+                id: 'plan_premium_2months',
+                name: '2 Months Premium Access',
+                amount: 10000, // Amount in paise (₹100)
                 currency: 'INR',
-                duration: 30
-            },
-            quarterly: {
-                id: 'plan_quarterly',
-                name: '3 Months Premium',
-                amount: 2499, // ₹24.99
-                currency: 'INR',
-                duration: 90,
-                discount: '17% off'
-            },
-            yearly: {
-                id: 'plan_yearly',
-                name: '1 Year Premium',
-                amount: 7999, // ₹79.99
-                currency: 'INR',
-                duration: 365,
-                discount: '33% off',
-                popular: true
+                duration: 60, // 60 days
+                dailyLimit: 5,
+                features: [
+                    'Access to all preference list generators',
+                    '5 preference lists per day',
+                    'Advanced analytics and insights',
+                    'Priority support',
+                    'Valid for 2 months'
+                ]
             }
         };
         
@@ -186,31 +177,39 @@ class SubscriptionManager {
         const modalContent = document.querySelector('.subscription-content');
         if (!modalContent) return;
         
+        const plan = this.subscriptionPlans.premium;
+        
         modalContent.innerHTML = `
-            <h2>Choose Your Premium Plan</h2>
-            <p>Unlock all features and get the best college recommendations</p>
+            <h2>Get Premium Access</h2>
+            <p>Unlock all features and create your perfect college preference lists</p>
             
-            <div class="subscription-plans">
-                ${Object.entries(this.subscriptionPlans).map(([key, plan]) => `
-                    <div class="plan-card ${plan.popular ? 'popular' : ''}" data-plan="${key}">
-                        ${plan.popular ? '<div class="popular-badge">Most Popular</div>' : ''}
-                        ${plan.discount ? `<div class="discount-badge">${plan.discount}</div>` : ''}
+            <div class="subscription-plan-single">
+                <div class="plan-card premium-plan">
+                    <div class="plan-header">
                         <h3>${plan.name}</h3>
                         <div class="plan-price">
                             <span class="currency">₹</span>
-                            <span class="amount">${(plan.amount / 100).toFixed(2)}</span>
+                            <span class="amount">${(plan.amount / 100)}</span>
+                            <span class="period">for 2 months</span>
                         </div>
-                        <ul class="plan-features">
-                            <li>✓ Access to all preference list generators</li>
-                            <li>✓ Advanced analytics and insights</li>
-                            <li>✓ Priority support</li>
-                            <li>✓ Regular updates</li>
-                        </ul>
-                        <button class="btn btn-primary select-plan-btn" onclick="SubscriptionManager.selectPlan('${key}')">
-                            Select Plan
-                        </button>
                     </div>
-                `).join('')}
+                    
+                    <div class="plan-features">
+                        <h4>What's Included:</h4>
+                        <ul>
+                            ${plan.features.map(feature => `<li><i class="fas fa-check"></i> ${feature}</li>`).join('')}
+                        </ul>
+                    </div>
+                    
+                    <button class="btn btn-primary select-plan-btn" onclick="window.SubscriptionManager.selectPlan('premium')">
+                        <i class="fas fa-crown"></i> Get Premium Access
+                    </button>
+                    
+                    <div class="plan-note">
+                        <i class="fas fa-info-circle"></i> 
+                        <span>One-time payment. No recurring charges.</span>
+                    </div>
+                </div>
             </div>
             
             <div class="secure-payment-info">
@@ -219,89 +218,113 @@ class SubscriptionManager {
             </div>
             
             <style>
-                .subscription-plans {
+                .subscription-plan-single {
                     display: flex;
-                    gap: 20px;
-                    margin: 30px 0;
-                    flex-wrap: wrap;
                     justify-content: center;
+                    margin: 30px 0;
                 }
                 
-                .plan-card {
-                    flex: 1;
-                    min-width: 200px;
-                    max-width: 300px;
-                    padding: 20px;
-                    border: 2px solid #e0e0e0;
-                    border-radius: 10px;
-                    text-align: center;
-                    position: relative;
+                .plan-card.premium-plan {
+                    max-width: 400px;
+                    width: 100%;
+                    padding: 30px;
+                    border: 2px solid var(--primary-color, #006B6B);
+                    border-radius: 15px;
+                    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+                    box-shadow: 0 10px 30px rgba(0, 107, 107, 0.1);
                     transition: all 0.3s ease;
                 }
                 
-                .plan-card:hover {
+                .plan-card.premium-plan:hover {
                     transform: translateY(-5px);
-                    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+                    box-shadow: 0 15px 40px rgba(0, 107, 107, 0.15);
                 }
                 
-                .plan-card.popular {
-                    border-color: var(--primary-color, #006B6B);
-                    transform: scale(1.05);
+                .plan-header {
+                    text-align: center;
+                    margin-bottom: 25px;
                 }
                 
-                .popular-badge {
-                    position: absolute;
-                    top: -12px;
-                    left: 50%;
-                    transform: translateX(-50%);
-                    background: var(--primary-color, #006B6B);
-                    color: white;
-                    padding: 4px 16px;
-                    border-radius: 20px;
-                    font-size: 12px;
-                    font-weight: bold;
-                }
-                
-                .discount-badge {
-                    position: absolute;
-                    top: 10px;
-                    right: 10px;
-                    background: #ff6b6b;
-                    color: white;
-                    padding: 4px 8px;
-                    border-radius: 5px;
-                    font-size: 11px;
-                    font-weight: bold;
+                .plan-header h3 {
+                    color: var(--primary-color, #006B6B);
+                    margin-bottom: 15px;
+                    font-size: 24px;
                 }
                 
                 .plan-price {
-                    margin: 20px 0;
-                    font-size: 36px;
+                    display: flex;
+                    align-items: baseline;
+                    justify-content: center;
+                    gap: 5px;
+                }
+                
+                .plan-price .currency {
+                    font-size: 24px;
+                    color: #666;
+                }
+                
+                .plan-price .amount {
+                    font-size: 48px;
                     font-weight: bold;
                     color: var(--primary-color, #006B6B);
                 }
                 
-                .plan-price .currency {
-                    font-size: 20px;
-                    vertical-align: super;
+                .plan-price .period {
+                    font-size: 16px;
+                    color: #666;
+                    margin-left: 5px;
                 }
                 
                 .plan-features {
+                    margin: 25px 0;
+                }
+                
+                .plan-features h4 {
+                    font-size: 16px;
+                    color: #333;
+                    margin-bottom: 15px;
+                }
+                
+                .plan-features ul {
                     list-style: none;
                     padding: 0;
-                    margin: 20px 0;
-                    text-align: left;
+                    margin: 0;
                 }
                 
                 .plan-features li {
-                    padding: 5px 0;
-                    color: #666;
+                    padding: 8px 0;
+                    color: #555;
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                }
+                
+                .plan-features li i {
+                    color: #27ae60;
+                    font-size: 14px;
                 }
                 
                 .select-plan-btn {
                     width: 100%;
-                    padding: 12px;
-                    margin-top: 20px;
+                    padding: 15px;
+                    font-size: 18px;
+                    font-weight: 600;
+                    background: var(--primary-color, #006B6B);
+                    color: white;
+                    border: none;
+                    border-radius: 8px;
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 10px;
+                }
+                
+                .select-plan-btn:hover {
+                    background: #005555;
+                    transform: translateY(-2px);
+                    box-shadow: 0 5px 15px rgba(0, 107, 107, 0.3);
                 }
                 
                 .select-plan-btn.loading {
@@ -312,16 +335,31 @@ class SubscriptionManager {
                 .select-plan-btn.loading::after {
                     content: "";
                     position: absolute;
-                    width: 16px;
-                    height: 16px;
+                    width: 20px;
+                    height: 20px;
                     top: 50%;
                     left: 50%;
-                    margin-left: -8px;
-                    margin-top: -8px;
-                    border: 2px solid #f3f3f3;
+                    margin-left: -10px;
+                    margin-top: -10px;
+                    border: 3px solid #f3f3f3;
                     border-radius: 50%;
-                    border-top: 2px solid #006B6B;
+                    border-top: 3px solid #006B6B;
                     animation: spin 1s linear infinite;
+                }
+                
+                .plan-note {
+                    text-align: center;
+                    margin-top: 15px;
+                    font-size: 13px;
+                    color: #666;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 5px;
+                }
+                
+                .plan-note i {
+                    color: #3498db;
                 }
                 
                 @keyframes spin {
@@ -342,17 +380,17 @@ class SubscriptionManager {
                 }
                 
                 @media (max-width: 768px) {
-                    .subscription-plans {
-                        flex-direction: column;
+                    .plan-card.premium-plan {
+                        padding: 20px;
                     }
                     
-                    .plan-card {
-                        max-width: 100%;
-                        margin-bottom: 20px;
+                    .plan-price .amount {
+                        font-size: 36px;
                     }
                     
-                    .plan-card.popular {
-                        transform: none;
+                    .select-plan-btn {
+                        font-size: 16px;
+                        padding: 12px;
                     }
                 }
             </style>
@@ -364,11 +402,11 @@ class SubscriptionManager {
      */
     async selectPlan(planKey) {
         if (!this.currentUser) {
-    alert('Please log in to continue');
-    return;
-}
-
-const plan = this.subscriptionPlans[planKey];
+            alert('Please log in to continue');
+            return;
+        }
+        
+        const plan = this.subscriptionPlans[planKey];
         if (!plan) {
             console.error('Invalid plan selected');
             return;
@@ -390,8 +428,8 @@ const plan = this.subscriptionPlans[planKey];
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    userId: manager.currentUser.uid,
-                    userEmail: manager.currentUser.email,
+                    userId: this.currentUser.uid,
+                    userEmail: this.currentUser.email,
                     planId: plan.id,
                     amount: plan.amount,
                     currency: plan.currency
@@ -417,7 +455,7 @@ const plan = this.subscriptionPlans[planKey];
                 const button = event.target;
                 button.classList.remove('loading');
                 button.disabled = false;
-                button.innerHTML = 'Select Plan';
+                button.innerHTML = '<i class="fas fa-crown"></i> Get Premium Access';
             }
         }
     }
