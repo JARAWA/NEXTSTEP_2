@@ -2,156 +2,191 @@
 <!-- Premium Subscription Modal -->
 <div id="subscriptionModal" class="modal" style="display: none;">
     <div class="modal-content subscription-modal">
-        <div class="modal-header">
-            <h2><i class="fas fa-crown"></i> Premium Access Required</h2>
-            <span class="close" id="close-subscription-modal">&times;</span>
-        </div>
-        <div class="modal-body">
-            <div class="subscription-message">
-                <p>To access our college preference list generators and other premium features, you need an active subscription.</p>
-            </div>
-            
-            <div class="subscription-options">
-                <div class="subscription-option">
-                    <h3><i class="fas fa-credit-card"></i> Pay Subscription Fee</h3>
-                    <p>Make a payment using our secure Razorpay link and share the payment screenshot on WhatsApp to get your subscription code.</p>
-                    <div class="option-actions">
-                        <a href="https://razorpay.me/@nextstepguidance?amount=ZFm4ghdmeB6pF5PK8Ki64w%3D%3D" class="btn payment-btn" target="_blank">
-                            <i class="fas fa-external-link-alt"></i> Pay Now
-                        </a>
-                        <a href="https://wa.me/9420444009?text=Hello!%20I've%20made%20the%20payment%20for%20NextStep%20Premium%20subscription.%20Please%20provide%20my%20subscription%20code." class="btn whatsapp-btn" target="_blank">
-                            <i class="fab fa-whatsapp"></i> Contact on WhatsApp
-                        </a>
-                    </div>
-                </div>
-                
-                <div class="subscription-option">
-                    <h3><i class="fas fa-key"></i> Enter Subscription Code</h3>
-                    <p>If you already have a subscription code, enter it below to activate your premium access.</p>
-                    <div class="subscription-form">
-                        <div class="form-group">
-                            <input type="text" id="subscription-code" placeholder="Enter your subscription code" class="subscription-input">
-                            <div id="subscription-code-error" class="error-message"></div>
-                        </div>
-                        <button id="activate-subscription" class="btn activate-btn">
-                            <i class="fas fa-check-circle"></i> Activate Premium
-                        </button>
-                    </div>
-                </div>
+        <span class="close" id="close-subscription-modal">&times;</span>
+        
+        <!-- This content will be replaced by subscription-manager.js -->
+        <div class="subscription-content">
+            <!-- Loading state while plans are being loaded -->
+            <div class="loading-spinner" style="text-align: center; padding: 40px;">
+                <i class="fas fa-spinner fa-spin" style="font-size: 48px; color: #006B6B; margin-bottom: 20px;"></i>
+                <p style="font-size: 18px; color: #666;">Loading subscription plans...</p>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Diagnostic script to track modal behavior -->
-<script>
-(function() {
-    console.log('🔍 DEBUG: Subscription modal HTML loaded');
+<style>
+/* Subscription Modal Specific Styles */
+.subscription-modal {
+    max-width: 900px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+}
+
+.subscription-content {
+    padding: 20px;
+}
+
+.subscription-content h2 {
+    text-align: center;
+    color: var(--primary-color, #006B6B);
+    margin-bottom: 10px;
+}
+
+.subscription-content > p {
+    text-align: center;
+    color: #666;
+    margin-bottom: 30px;
+}
+
+/* Close button styling */
+#close-subscription-modal {
+    position: absolute;
+    right: 20px;
+    top: 20px;
+    font-size: 28px;
+    font-weight: bold;
+    color: #aaa;
+    cursor: pointer;
+    transition: color 0.3s;
+}
+
+#close-subscription-modal:hover,
+#close-subscription-modal:focus {
+    color: #000;
+}
+
+/* Loading spinner animation */
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.fa-spinner {
+    animation: spin 1s linear infinite;
+}
+
+/* Subscription Error Styles (if needed) */
+.subscription-error {
+    background-color: #fee;
+    border: 1px solid #fcc;
+    color: #c33;
+    padding: 10px;
+    border-radius: 5px;
+    margin: 10px 0;
+    text-align: center;
+}
+
+/* Payment Processing Overlay */
+.payment-processing {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+}
+
+.payment-processing-content {
+    background: white;
+    padding: 40px;
+    border-radius: 10px;
+    text-align: center;
+}
+
+.payment-processing-content i {
+    font-size: 48px;
+    color: var(--primary-color, #006B6B);
+    margin-bottom: 20px;
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+/* Success Animation */
+.payment-success {
+    text-align: center;
+    padding: 40px;
+}
+
+.payment-success i {
+    font-size: 72px;
+    color: #27ae60;
+    margin-bottom: 20px;
+    animation: checkmark 0.5s ease-in-out;
+}
+
+@keyframes checkmark {
+    0% { transform: scale(0) rotate(0deg); }
+    50% { transform: scale(1.2) rotate(10deg); }
+    100% { transform: scale(1) rotate(0deg); }
+}
+
+.payment-success h3 {
+    color: #27ae60;
+    margin-bottom: 10px;
+}
+
+.payment-success p {
+    color: #666;
+    margin-bottom: 20px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .subscription-modal {
+        width: 95%;
+        margin: 10px auto;
+    }
     
+    .subscription-content {
+        padding: 15px;
+    }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+    .subscription-modal {
+        background-color: #1a1a1a;
+        color: #e0e0e0;
+    }
+    
+    #close-subscription-modal {
+        color: #ccc;
+    }
+    
+    #close-subscription-modal:hover {
+        color: #fff;
+    }
+    
+    .loading-spinner p {
+        color: #aaa;
+    }
+}
+</style>
+
+<script>
+// Ensure modal is hidden on load
+document.addEventListener('DOMContentLoaded', function() {
     const modal = document.getElementById('subscriptionModal');
     if (modal) {
-        console.log('🔍 DEBUG: Modal initial display style:', modal.style.display);
-        
-        // Ensure modal is hidden by default
         modal.style.display = 'none';
-        console.log('🔍 DEBUG: Modal explicitly set to none');
-        
-        // Monitor changes to the modal's display property
-        const modalObserver = new MutationObserver(function(mutations) {
-            mutations.forEach(function(mutation) {
-                if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
-                    console.log('🔍 DEBUG: Modal display changed to:', modal.style.display);
-                    console.trace('🔍 STACK TRACE for modal display change');
-                    
-                    // Important: Re-hide the modal if it's being shown automatically
-                    // and not through the proper subscription manager flow
-                    if (modal.style.display === 'block' && 
-                        !window._explicitlyShowingModal && 
-                        window.SubscriptionManager) {
-                        
-                        console.log('🔍 DEBUG: Detected unwanted modal display, re-hiding');
-                        setTimeout(() => {
-                            if (!window._explicitlyShowingModal) {
-                                modal.style.display = 'none';
-                            }
-                        }, 100);
-                    }
-                }
-            });
-        });
-        
-        modalObserver.observe(modal, { attributes: true });
-        console.log('🔍 DEBUG: Modal observer started');
-        
-        // Hide modal when clicking Close button
-        const closeButton = document.getElementById('close-subscription-modal');
-        if (closeButton) {
-            closeButton.addEventListener('click', () => {
-                console.log('🔍 DEBUG: Close button clicked');
-                modal.style.display = 'none';
-            });
-        }
-        
-        // Hide modal when clicking outside
-        window.addEventListener('click', (event) => {
-            if (event.target === modal) {
-                console.log('🔍 DEBUG: Clicked outside modal');
-                modal.style.display = 'none';
-            }
-        });
+        console.log('Subscription modal initialized and hidden');
     }
-    
-    // Patch the SubscriptionManager.showSubscriptionModal method to track explicit shows
-    if (window.SubscriptionManager) {
-        const originalShowModal = window.SubscriptionManager.showSubscriptionModal;
-        
-        window.SubscriptionManager.showSubscriptionModal = async function() {
-            console.log('🔍 DEBUG: showSubscriptionModal called');
-            console.trace('🔍 STACK TRACE for showSubscriptionModal call');
-            
-            window._explicitlyShowingModal = true;
-            
-            try {
-                // Call the original method
-                await originalShowModal.apply(this, arguments);
-            } finally {
-                // Clear the flag after a delay
-                setTimeout(() => {
-                    window._explicitlyShowingModal = false;
-                }, 200);
-            }
-        };
-        
-        console.log('🔍 DEBUG: Patched showSubscriptionModal method');
-    } else {
-        console.log('🔍 DEBUG: SubscriptionManager not available yet, will patch later');
-        
-        // Wait for SubscriptionManager to be available
-        const checkInterval = setInterval(() => {
-            if (window.SubscriptionManager) {
-                const originalShowModal = window.SubscriptionManager.showSubscriptionModal;
-                
-                window.SubscriptionManager.showSubscriptionModal = async function() {
-                    console.log('🔍 DEBUG: showSubscriptionModal called (delayed patch)');
-                    console.trace('🔍 STACK TRACE for showSubscriptionModal call');
-                    
-                    window._explicitlyShowingModal = true;
-                    
-                    try {
-                        // Call the original method
-                        await originalShowModal.apply(this, arguments);
-                    } finally {
-                        // Clear the flag after a delay
-                        setTimeout(() => {
-                            window._explicitlyShowingModal = false;
-                        }, 200);
-                    }
-                };
-                
-                console.log('🔍 DEBUG: Patched showSubscriptionModal method (delayed)');
-                clearInterval(checkInterval);
-            }
-        }, 500);
-    }
-})();
+});
+
+// Add to prevent form resubmission on page refresh
+if (window.history.replaceState) {
+    window.history.replaceState(null, null, window.location.href);
+}
 </script>
