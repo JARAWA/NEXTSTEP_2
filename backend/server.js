@@ -12,6 +12,8 @@ app.use(cors({
   origin: [
     'https://nextstepedu.co.in',
     'https://www.nextstepedu.co.in',
+    'https://nextstep-2.onrender.com',
+    'https://nextstep-backend-xdd7.onrender.com',
     'http://localhost:3000',
     'http://localhost:5000'
   ]
