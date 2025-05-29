@@ -24,7 +24,7 @@ class SubscriptionManager {
         this._isShowingModal = false;
         
         // Backend API URL - UPDATE THIS WITH YOUR ACTUAL RENDER BACKEND URL
-        this.BACKEND_URL = 'https://nextstep-backend.onrender.com';
+        this.BACKEND_URL = 'https://nextstep-backend-xdd7.onrender.com';
         // For local testing: this.BACKEND_URL = 'http://localhost:5000';
         
         // Razorpay configuration
