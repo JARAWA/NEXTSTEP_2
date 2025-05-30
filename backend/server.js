@@ -55,15 +55,15 @@ app.post('/api/create-order', async (req, res) => {
     }
 
     // Create Razorpay order
-    const order = await razorpay.orders.create({
-      amount: amount, // Amount in paise
-      currency: currency,
-      receipt: `order_${userId}_${Date.now()}`,
-      notes: {
-        userId: userId,
-        planId: planId
-      }
-    });
+  const order = await razorpay.orders.create({
+  amount: amount, // Amount in paise
+  currency: currency,
+  receipt: `NSP${Date.now()}`, // Shortened to under 40 chars
+  notes: {
+    userId: userId,  // Full userId stored in notes for reference
+    planId: planId
+  }
+});
 
     // Store order in Firestore
     await db.collection('subscription_orders').doc(order.id).set({
