@@ -68,8 +68,8 @@ class AdminUserManagement {
 
     // Set up event listeners
     setupEventListeners() {
-        // Logout button
-        const logoutBtn = document.getElementById('admin-logout-btn');
+        // Logout button - updated ID to match new structure
+        const logoutBtn = document.getElementById('logout-btn');
         if (logoutBtn) {
             logoutBtn.addEventListener('click', () => this.handleLogout());
         }
@@ -171,8 +171,8 @@ class AdminUserManagement {
             this.createNewUser();
         });
         
-        // Modal close buttons
-        document.querySelectorAll('.admin-modal-close, .cancel-btn').forEach(btn => {
+        // Modal close buttons - updated selector for new modal structure
+        document.querySelectorAll('.modal-close, .cancel-btn').forEach(btn => {
             btn.addEventListener('click', () => this.closeAllModals());
         });
         
@@ -199,16 +199,31 @@ class AdminUserManagement {
         // Setup subscription status change handler in edit form
         document.getElementById('edit-subscription-status')?.addEventListener('change', (e) => {
             const hasSubscription = e.target.value !== 'none';
-            document.getElementById('subscription-details-container').style.display = 
-                hasSubscription ? 'block' : 'none';
+            const subscriptionContainer = document.getElementById('subscription-details-container');
+            if (subscriptionContainer) {
+                subscriptionContainer.style.display = hasSubscription ? 'block' : 'none';
+            }
             
             // Set default expiry date if activating new subscription
             if (e.target.value === 'active') {
                 const defaultExpiry = new Date();
                 defaultExpiry.setDate(defaultExpiry.getDate() + 365); // 1 year
-                document.getElementById('edit-subscription-expiry').valueAsDate = defaultExpiry;
+                const expiryInput = document.getElementById('edit-subscription-expiry');
+                if (expiryInput) {
+                    expiryInput.valueAsDate = defaultExpiry;
+                }
             }
         });
+
+        // Sidebar toggle functionality
+        const sidebarToggle = document.getElementById('sidebar-toggle');
+        const sidebar = document.querySelector('.sidebar');
+        
+        if (sidebarToggle && sidebar) {
+            sidebarToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('collapsed');
+            });
+        }
     }
 
     // Initialize user management
@@ -223,7 +238,7 @@ class AdminUserManagement {
                     const isAdmin = await this.verifyAdminStatus(user.uid);
                     
                     if (!isAdmin) {
-                        alert('You do not have admin permissions');
+                        this.showToast('You do not have admin permissions', 'error');
                         await this.handleLogout();
                         return;
                     }
@@ -232,9 +247,9 @@ class AdminUserManagement {
                     await this.loadAdminData();
                     
                     // Update admin name in header
-                    const adminNameElement = document.querySelector('.admin-name');
-                    if (adminNameElement) {
-                        adminNameElement.textContent = this.currentAdminData?.name || user.displayName || user.email;
+                    const profileName = document.querySelector('.profile-name');
+                    if (profileName) {
+                        profileName.textContent = this.currentAdminData?.name || user.displayName || user.email;
                     }
                     
                     // Check URL for action parameters
@@ -303,7 +318,7 @@ class AdminUserManagement {
             const tableBody = document.querySelector('#users-table tbody');
             
             if (tableBody) {
-                tableBody.innerHTML = '<tr><td colspan="9" class="loading-cell">Loading users...</td></tr>';
+                tableBody.innerHTML = '<tr><td colspan="10" class="loading-state"><div class="loading-spinner"></div>Loading users...</td></tr>';
             }
             
             // Create base query
@@ -456,7 +471,7 @@ class AdminUserManagement {
         if (!tableBody) return;
         
         if (this.filteredUsers.length === 0) {
-            tableBody.innerHTML = '<tr><td colspan="9" class="loading-cell">No users found</td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="10" class="loading-state">No users found</td></tr>';
             return;
         }
         
@@ -497,10 +512,22 @@ class AdminUserManagement {
                         <input type="checkbox" class="user-checkbox" 
                                ${this.selectedUserIds.has(user.id) ? 'checked' : ''}>
                     </td>
-                    <td>${user.name || 'N/A'}</td>
+                    <td>
+                        <div class="user-cell">
+                            <img src="images/avatar-placeholder.png" alt="${user.name}" class="table-avatar">
+                            <div class="user-info">
+                                <div class="user-name">${user.name || 'N/A'}</div>
+                                <div class="user-id">#${user.id.substring(0, 8)}</div>
+                            </div>
+                        </div>
+                    </td>
                     <td>${user.email || 'N/A'}</td>
                     <td>${user.mobileNumber || 'N/A'}</td>
-                    <td>${examLabels.length ? examLabels.join(', ') : 'None'}</td>
+                    <td>
+                        <div class="exam-tags">
+                            ${examLabels.map(exam => `<span class="exam-tag">${exam}</span>`).join('')}
+                        </div>
+                    </td>
                     <td>${createdDate}</td>
                     <td>
                         <span class="status-badge ${this.getRoleBadgeClass(user.userRole)}">
@@ -518,18 +545,20 @@ class AdminUserManagement {
                         </span>
                     </td>
                     <td class="actions-cell">
-                        <button class="action-btn view" title="View User" onclick="adminUserManager.viewUser('${user.id}')">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                        <button class="action-btn edit" title="Edit User" onclick="adminUserManager.editUser('${user.id}')">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="action-btn subscription" title="Manage Subscription" onclick="adminUserManager.manageSubscription('${user.id}')">
-                            <i class="fas fa-crown"></i>
-                        </button>
-                        <button class="action-btn delete" title="Delete User" onclick="adminUserManager.confirmDeleteUser('${user.id}')">
-                            <i class="fas fa-trash"></i>
-                        </button>
+                        <div class="table-actions">
+                            <button class="table-action-btn view" title="View User" onclick="adminUserManager.viewUser('${user.id}')">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="table-action-btn edit" title="Edit User" onclick="adminUserManager.editUser('${user.id}')">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="table-action-btn more" title="Manage Subscription" onclick="adminUserManager.manageSubscription('${user.id}')">
+                                <i class="fas fa-crown"></i>
+                            </button>
+                            <button class="table-action-btn delete" title="Delete User" onclick="adminUserManager.confirmDeleteUser('${user.id}')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
                     </td>
                 </tr>
             `;
@@ -558,12 +587,16 @@ class AdminUserManagement {
 
     // Update pagination info
     updatePaginationInfo() {
-        document.getElementById('showing-start').textContent = ((this.currentPage - 1) * this.pageSize) + 1;
+        const startElement = document.getElementById('showing-start');
+        const endElement = document.getElementById('showing-end');
+        const totalElement = document.getElementById('total-users-count');
+        
+        if (startElement) startElement.textContent = ((this.currentPage - 1) * this.pageSize) + 1;
         
         const end = Math.min(this.currentPage * this.pageSize, this.totalUsers);
-        document.getElementById('showing-end').textContent = end;
+        if (endElement) endElement.textContent = end;
         
-        document.getElementById('total-users-count').textContent = this.totalUsers;
+        if (totalElement) totalElement.textContent = this.totalUsers;
     }
 
     // Update pagination controls
@@ -620,7 +653,8 @@ class AdminUserManagement {
 
     // Next page
     nextPage() {
-        if (document.getElementById('next-page').disabled) return;
+        const nextBtn = document.getElementById('next-page');
+        if (nextBtn && nextBtn.disabled) return;
         
         this.currentPage++;
         this.loadUsers('next');
@@ -628,7 +662,8 @@ class AdminUserManagement {
 
     // Previous page
     previousPage() {
-        if (document.getElementById('prev-page').disabled) return;
+        const prevBtn = document.getElementById('prev-page');
+        if (prevBtn && prevBtn.disabled) return;
         
         this.currentPage--;
         this.loadUsers('prev');
@@ -658,13 +693,21 @@ class AdminUserManagement {
         };
         
         // Reset filter form
-        document.getElementById('role-filter').value = 'all';
-        document.getElementById('exam-filter').value = 'all';
-        document.getElementById('status-filter').value = 'all';
-        document.getElementById('subscription-filter').value = 'all';
-        document.getElementById('date-from').value = '';
-        document.getElementById('date-to').value = '';
-        document.getElementById('user-search').value = '';
+        const roleFilter = document.getElementById('role-filter');
+        const examFilter = document.getElementById('exam-filter');
+        const statusFilter = document.getElementById('status-filter');
+        const subscriptionFilter = document.getElementById('subscription-filter');
+        const dateFrom = document.getElementById('date-from');
+        const dateTo = document.getElementById('date-to');
+        const userSearch = document.getElementById('user-search');
+        
+        if (roleFilter) roleFilter.value = 'all';
+        if (examFilter) examFilter.value = 'all';
+        if (statusFilter) statusFilter.value = 'all';
+        if (subscriptionFilter) subscriptionFilter.value = 'all';
+        if (dateFrom) dateFrom.value = '';
+        if (dateTo) dateTo.value = '';
+        if (userSearch) userSearch.value = '';
         
         // Apply reset filters
         this.applyFilters();
@@ -841,7 +884,8 @@ class AdminUserManagement {
         document.querySelectorAll('#edit-rank-fields .rank-field').forEach(field => {
             const examKey = field.dataset.exam;
             const checkboxId = `edit-${examKey.replace(/([A-Z])/g, '-$1').toLowerCase()}`;
-            const isChecked = document.getElementById(checkboxId).checked;
+            const checkbox = document.getElementById(checkboxId);
+            const isChecked = checkbox ? checkbox.checked : false;
             field.style.display = isChecked ? 'block' : 'none';
         });
     }
@@ -903,31 +947,34 @@ class AdminUserManagement {
 
             if (subscriptionStatus !== 'none') {
                 const isActive = subscriptionStatus === 'active';
-                const expiryDate = document.getElementById('edit-subscription-expiry').valueAsDate;
+                const expiryDateInput = document.getElementById('edit-subscription-expiry');
+                const expiryDate = expiryDateInput ? expiryDateInput.valueAsDate : null;
                 const code = document.getElementById('edit-subscription-code').value.trim();
                 
-                userData.subscription = {
-                    isActive: isActive,
-                    expiryDate: expiryDate.toISOString(),
-                    updatedAt: new Date().toISOString(),
-                    updatedBy: this.currentUser.uid
-                };
-                
-                if (code) {
-                    userData.subscription.code = code;
-                }
-                
-                // If this is a new active subscription, set activatedAt
-                if (isActive) {
-                    // Get current user data
-                    const userDoc = await getDoc(doc(this.db, "users", userId));
-                    const currentUserData = userDoc.data();
+                if (expiryDate) {
+                    userData.subscription = {
+                        isActive: isActive,
+                        expiryDate: expiryDate.toISOString(),
+                        updatedAt: new Date().toISOString(),
+                        updatedBy: this.currentUser.uid
+                    };
                     
-                    if (!currentUserData.subscription || !currentUserData.subscription.activatedAt) {
-                        userData.subscription.activatedAt = new Date().toISOString();
-                    } else {
-                        // Keep original activation date
-                        userData.subscription.activatedAt = currentUserData.subscription.activatedAt;
+                    if (code) {
+                        userData.subscription.code = code;
+                    }
+                    
+                    // If this is a new active subscription, set activatedAt
+                    if (isActive) {
+                        // Get current user data
+                        const userDoc = await getDoc(doc(this.db, "users", userId));
+                        const currentUserData = userDoc.data();
+                        
+                        if (!currentUserData.subscription || !currentUserData.subscription.activatedAt) {
+                            userData.subscription.activatedAt = new Date().toISOString();
+                        } else {
+                            // Keep original activation date
+                            userData.subscription.activatedAt = currentUserData.subscription.activatedAt;
+                        }
                     }
                 }
             } else {
@@ -953,7 +1000,7 @@ class AdminUserManagement {
     // Show add user modal
     showAddUserModal() {
         // Create the form dynamically if it doesn't exist
-        const formContainer = document.querySelector('#addUserModal .admin-modal-body');
+        const formContainer = document.querySelector('#addUserModal .modal-body');
         
         if (formContainer) {
             formContainer.innerHTML = `
@@ -1074,8 +1121,8 @@ class AdminUserManagement {
                     </div>
                     
                     <div class="modal-actions">
-                        <button type="button" class="btn-secondary cancel-btn">Cancel</button>
-                        <button type="submit" class="btn-primary save-btn">Create User</button>
+                        <button type="button" class="btn secondary cancel-btn">Cancel</button>
+                        <button type="submit" class="btn primary save-btn">Create User</button>
                     </div>
                 </form>
             `;
@@ -1629,6 +1676,7 @@ class AdminUserManagement {
         const modal = document.getElementById(modalId);
         if (modal) {
             modal.style.display = 'block';
+            modal.classList.add('active');
         }
     }
 
@@ -1637,13 +1685,15 @@ class AdminUserManagement {
         const modal = document.getElementById(modalId);
         if (modal) {
             modal.style.display = 'none';
+            modal.classList.remove('active');
         }
     }
 
     // Close all modals
     closeAllModals() {
-        document.querySelectorAll('.admin-modal').forEach(modal => {
+        document.querySelectorAll('.modal').forEach(modal => {
             modal.style.display = 'none';
+            modal.classList.remove('active');
         });
     }
 
@@ -1669,19 +1719,33 @@ class AdminUserManagement {
         // Create toast element
         const toast = document.createElement('div');
         toast.className = `toast toast-${type}`;
-        toast.textContent = message;
+        
+        const icon = this.getToastIcon(type);
+        toast.innerHTML = `
+            <i class="${icon}"></i>
+            <span>${message}</span>
+        `;
+        
         document.body.appendChild(toast);
         
-        // Show toast with animation
+        // Show toast
+        setTimeout(() => toast.classList.add('show'), 100);
+        
+        // Hide toast
         setTimeout(() => {
-            toast.classList.add('show');
-            setTimeout(() => {
-                toast.classList.remove('show');
-                setTimeout(() => {
-                    document.body.removeChild(toast);
-                }, 300);
-            }, 3000);
-        }, 100);
+            toast.classList.remove('show');
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+
+    getToastIcon(type) {
+        const icons = {
+            success: 'fas fa-check-circle',
+            error: 'fas fa-exclamation-circle',
+            warning: 'fas fa-exclamation-triangle',
+            info: 'fas fa-info-circle'
+        };
+        return icons[type] || icons.info;
     }
 }
 
