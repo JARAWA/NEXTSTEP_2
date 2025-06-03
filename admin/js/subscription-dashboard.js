@@ -62,6 +62,9 @@ class SubscriptionDashboard {
             monthlyRevenue: 0
         };
         
+        // Charts
+        this.charts = {};
+        
         // Initialize
         this.setupEventListeners();
         this.initializeSubscriptionDashboard();
@@ -69,8 +72,8 @@ class SubscriptionDashboard {
     
     // Set up event listeners
     setupEventListeners() {
-        // Logout button
-        const logoutBtn = document.getElementById('admin-logout-btn');
+        // Logout button - updated ID to match new structure
+        const logoutBtn = document.getElementById('logout-btn');
         if (logoutBtn) {
             logoutBtn.addEventListener('click', () => this.handleLogout());
         }
@@ -149,9 +152,13 @@ class SubscriptionDashboard {
         const chartFilters = document.querySelectorAll('.chart-filter');
         chartFilters.forEach(filter => {
             filter.addEventListener('click', (e) => {
-                chartFilters.forEach(f => f.classList.remove('active'));
+                const parent = e.target.closest('.chart-card');
+                const filters = parent.querySelectorAll('.chart-filter');
+                
+                filters.forEach(f => f.classList.remove('active'));
                 e.target.classList.add('active');
-                this.updateCharts(e.target.dataset.period);
+                
+                this.updateChart(parent, e.target.dataset.period);
             });
         });
         
@@ -186,21 +193,23 @@ class SubscriptionDashboard {
             const durationValue = parseInt(e.target.value);
             const codeSelect = document.getElementById('batch-subscription-code');
             
-            switch(durationValue) {
-                case 7:
-                    codeSelect.value = 'TRYNEXTSTEP';
-                    break;
-                case 90:
-                    codeSelect.value = 'PREMIUM3MONTH';
-                    break;
-                case 365:
-                    codeSelect.value = 'NEXTSTEP2025';
-                    break;
+            if (codeSelect) {
+                switch(durationValue) {
+                    case 7:
+                        codeSelect.value = 'TRYNEXTSTEP';
+                        break;
+                    case 90:
+                        codeSelect.value = 'PREMIUM3MONTH';
+                        break;
+                    case 365:
+                        codeSelect.value = 'NEXTSTEP2025';
+                        break;
+                }
             }
         });
         
-        // Modal close buttons
-        document.querySelectorAll('.admin-modal-close, .cancel-btn').forEach(btn => {
+        // Modal close buttons - updated selector for new modal structure
+        document.querySelectorAll('.modal-close, .cancel-btn').forEach(btn => {
             btn.addEventListener('click', () => this.closeAllModals());
         });
         
@@ -211,6 +220,16 @@ class SubscriptionDashboard {
             }
             this.closeModal('confirmationModal');
         });
+
+        // Sidebar toggle functionality
+        const sidebarToggle = document.getElementById('sidebar-toggle');
+        const sidebar = document.querySelector('.sidebar');
+        
+        if (sidebarToggle && sidebar) {
+            sidebarToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('collapsed');
+            });
+        }
     }
     
     // Initialize subscription dashboard
@@ -225,7 +244,7 @@ class SubscriptionDashboard {
                     const isAdmin = await this.verifyAdminStatus(user.uid);
                     
                     if (!isAdmin) {
-                        alert('You do not have admin permissions');
+                        this.showToast('You do not have admin permissions', 'error');
                         await this.handleLogout();
                         return;
                     }
@@ -234,9 +253,9 @@ class SubscriptionDashboard {
                     await this.loadAdminData();
                     
                     // Update admin name in header
-                    const adminNameElement = document.querySelector('.admin-name');
-                    if (adminNameElement) {
-                        adminNameElement.textContent = this.currentAdminData?.name || user.displayName || user.email;
+                    const profileName = document.querySelector('.profile-name');
+                    if (profileName) {
+                        profileName.textContent = this.currentAdminData?.name || user.displayName || user.email;
                     }
                     
                     // Initialize dashboard
@@ -323,16 +342,51 @@ class SubscriptionDashboard {
             // 4. Calculate monthly revenue (assuming ₹999 per yearly subscription)
             this.stats.monthlyRevenue = this.stats.monthlyRenewals * 999;
             
-            // Update UI
-            document.getElementById('active-subscriptions').textContent = this.stats.activeSubscriptions;
-            document.getElementById('expired-subscriptions').textContent = this.stats.expiredSubscriptions;
-            document.getElementById('monthly-renewals').textContent = this.stats.monthlyRenewals;
-            document.getElementById('monthly-revenue').textContent = '₹' + this.stats.monthlyRevenue.toLocaleString();
+            // Update UI with animations
+            this.animateStatValues();
             
         } catch (error) {
             console.error('Error loading subscription stats:', error);
             this.showToast('Error loading statistics', 'error');
         }
+    }
+
+    animateStatValues() {
+        const stats = [
+            { id: 'active-subscriptions', value: this.stats.activeSubscriptions },
+            { id: 'expired-subscriptions', value: this.stats.expiredSubscriptions },
+            { id: 'monthly-renewals', value: this.stats.monthlyRenewals },
+            { id: 'monthly-revenue', value: this.stats.monthlyRevenue, prefix: '₹' }
+        ];
+
+        stats.forEach(stat => {
+            const element = document.getElementById(stat.id);
+            if (element) {
+                this.animateValue(element, 0, stat.value, 1000, stat.prefix);
+            }
+        });
+    }
+
+    animateValue(element, start, end, duration, prefix = '') {
+        const startTimestamp = performance.now();
+        
+        const step = (currentTimestamp) => {
+            const elapsed = currentTimestamp - startTimestamp;
+            const progress = Math.min(elapsed / duration, 1);
+            
+            const current = Math.floor(start + (end - start) * this.easeOutQuart(progress));
+            element.textContent = prefix + current.toLocaleString();
+            
+            if (progress < 1) {
+                requestAnimationFrame(step);
+            }
+        };
+        
+        requestAnimationFrame(step);
+    }
+
+    easeOutQuart(t) {
+        return 1 - Math.pow(1 - t, 4);
     }
     
     // Load subscriptions with pagination
@@ -341,7 +395,7 @@ class SubscriptionDashboard {
             const tableBody = document.querySelector('#subscriptions-table tbody');
             
             if (tableBody) {
-                tableBody.innerHTML = '<tr><td colspan="9" class="loading-cell">Loading subscriptions...</td></tr>';
+                tableBody.innerHTML = '<tr><td colspan="9" class="loading-state"><div class="loading-spinner"></div>Loading subscriptions...</td></tr>';
             }
             
             // Create base query for users with subscriptions
@@ -504,7 +558,7 @@ class SubscriptionDashboard {
         if (!tableBody) return;
         
         if (this.filteredSubscriptions.length === 0) {
-            tableBody.innerHTML = '<tr><td colspan="9" class="loading-cell">No subscriptions found</td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="9" class="loading-state">No subscriptions found</td></tr>';
             return;
         }
         
@@ -551,7 +605,15 @@ class SubscriptionDashboard {
                         <input type="checkbox" class="subscription-checkbox" 
                                ${this.selectedSubscriptionIds.has(item.userId) ? 'checked' : ''}>
                     </td>
-                    <td>${item.name}</td>
+                    <td>
+                        <div class="user-cell">
+                            <img src="images/avatar-placeholder.png" alt="${item.name}" class="table-avatar">
+                            <div class="user-info">
+                                <div class="user-name">${item.name}</div>
+                                <div class="user-id">#${item.userId.substring(0, 8)}</div>
+                            </div>
+                        </div>
+                    </td>
                     <td>${item.email}</td>
                     <td>
                         <span class="status-badge ${statusClass}">
@@ -563,15 +625,17 @@ class SubscriptionDashboard {
                     <td>${expiryDate ? expiryDate.toLocaleDateString() : 'N/A'}</td>
                     <td>${durationLabel}</td>
                     <td class="actions-cell">
-                        <button class="action-btn edit" title="Manage Subscription" onclick="subscriptionDashboard.manageSubscription('${item.userId}')">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="action-btn renew" title="Renew Subscription" onclick="subscriptionDashboard.renewSubscription('${item.userId}')">
-                            <i class="fas fa-sync"></i>
-                        </button>
-                        <button class="action-btn cancel" title="Cancel Subscription" onclick="subscriptionDashboard.confirmCancelSubscription('${item.userId}')">
-                            <i class="fas fa-ban"></i>
-                        </button>
+                        <div class="table-actions">
+                            <button class="table-action-btn edit" title="Manage Subscription" onclick="subscriptionDashboard.manageSubscription('${item.userId}')">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="table-action-btn renew" title="Renew Subscription" onclick="subscriptionDashboard.renewSubscription('${item.userId}')">
+                                <i class="fas fa-sync"></i>
+                            </button>
+                            <button class="table-action-btn cancel" title="Cancel Subscription" onclick="subscriptionDashboard.confirmCancelSubscription('${item.userId}')">
+                                <i class="fas fa-ban"></i>
+                            </button>
+                        </div>
                     </td>
                 </tr>
             `;
@@ -595,7 +659,7 @@ class SubscriptionDashboard {
             
             if (!tableBody) return;
             
-            tableBody.innerHTML = '<tr><td colspan="6" class="loading-cell">Loading upcoming expirations...</td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="6" class="loading-state"><div class="loading-spinner"></div>Loading upcoming expirations...</td></tr>';
             
             // Get date range for next 7 days
             const now = new Date();
@@ -614,7 +678,7 @@ class SubscriptionDashboard {
             const querySnapshot = await getDocs(expiringQuery);
             
             if (querySnapshot.empty) {
-                tableBody.innerHTML = '<tr><td colspan="6" class="loading-cell">No upcoming expirations in the next 7 days</td></tr>';
+                tableBody.innerHTML = '<tr><td colspan="6" class="loading-state">No upcoming expirations in the next 7 days</td></tr>';
                 return;
             }
             
@@ -646,7 +710,15 @@ class SubscriptionDashboard {
                 
                 tableBody.innerHTML += `
                     <tr>
-                        <td>${userData.name || 'Unknown'}</td>
+                        <td>
+                            <div class="user-cell">
+                                <img src="images/avatar-placeholder.png" alt="${userData.name}" class="table-avatar">
+                                <div class="user-info">
+                                    <div class="user-name">${userData.name || 'Unknown'}</div>
+                                    <div class="user-id">#${doc.id.substring(0, 8)}</div>
+                                </div>
+                            </div>
+                        </td>
                         <td>${userData.email || 'No email'}</td>
                         <td>${expiryDate.toLocaleDateString()}</td>
                         <td>
@@ -654,12 +726,14 @@ class SubscriptionDashboard {
                         </td>
                         <td>${originalDuration}</td>
                         <td>
-                            <button class="action-btn renew" onclick="subscriptionDashboard.renewSubscription('${doc.id}')">
-                                <i class="fas fa-sync"></i> Renew
-                            </button>
-                            <button class="action-btn notify" onclick="subscriptionDashboard.sendExpirationReminder('${doc.id}')">
-                                <i class="fas fa-bell"></i> Notify
-                            </button>
+                            <div class="table-actions">
+                                <button class="table-action-btn renew" title="Renew" onclick="subscriptionDashboard.renewSubscription('${doc.id}')">
+                                    <i class="fas fa-sync"></i>
+                                </button>
+                                <button class="table-action-btn notify" title="Notify" onclick="subscriptionDashboard.sendExpirationReminder('${doc.id}')">
+                                    <i class="fas fa-bell"></i>
+                                </button>
+                            </div>
                         </td>
                     </tr>
                 `;
@@ -858,48 +932,67 @@ class SubscriptionDashboard {
         
         const ctx = document.getElementById('growthChart').getContext('2d');
         
-        new Chart(ctx, {
+        if (this.charts.growth) {
+            this.charts.growth.destroy();
+        }
+        
+        this.charts.growth = new Chart(ctx, {
             type: 'line',
             data: {
                 labels: labels,
                 datasets: [{
                     label: 'New Subscriptions',
                     data: data,
-                    backgroundColor: 'rgba(241, 196, 15, 0.2)',
-                    borderColor: 'rgba(241, 196, 15, 1)',
-                    borderWidth: 2,
-                    pointBackgroundColor: 'rgba(241, 196, 15, 1)',
-                    pointRadius: 4,
-                    tension: 0.3
+                    backgroundColor: 'rgba(0, 107, 107, 0.1)',
+                    borderColor: 'rgba(0, 107, 107, 1)',
+                    borderWidth: 3,
+                    pointBackgroundColor: 'rgba(0, 107, 107, 1)',
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 2,
+                    pointRadius: 6,
+                    pointHoverRadius: 8,
+                    fill: true,
+                    tension: 0.4
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            precision: 0
-                        }
-                    }
-                },
                 plugins: {
                     legend: {
                         display: false
                     },
                     tooltip: {
-                        backgroundColor: 'rgba(0, 0, 0, 0.7)',
-                        padding: 10,
-                        titleFont: {
-                            size: 14,
-                            family: "'Poppins', sans-serif"
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        titleFont: { family: 'Poppins' },
+                        bodyFont: { family: 'Poppins' },
+                        cornerRadius: 8,
+                        padding: 12
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            display: false
                         },
-                        bodyFont: {
-                            size: 12,
-                            family: "'Poppins', sans-serif"
+                        ticks: {
+                            font: { family: 'Poppins' }
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        },
+                        ticks: {
+                            precision: 0,
+                            font: { family: 'Poppins' }
                         }
                     }
+                },
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
                 }
             }
         });
@@ -924,7 +1017,11 @@ class SubscriptionDashboard {
             '#f1c40f'  // Yellow
         ];
         
-        new Chart(ctx, {
+        if (this.charts.revenue) {
+            this.charts.revenue.destroy();
+        }
+        
+        this.charts.revenue = new Chart(ctx, {
             type: 'doughnut',
             data: {
                 labels: labels,
@@ -940,18 +1037,19 @@ class SubscriptionDashboard {
                 maintainAspectRatio: false,
                 plugins: {
                     legend: {
-                        position: 'right',
+                        position: 'bottom',
                         labels: {
                             padding: 20,
                             boxWidth: 15,
+                            usePointStyle: true,
                             font: {
-                                family: "'Poppins', sans-serif",
+                                family: 'Poppins',
                                 size: 12
                             }
                         }
                     },
                     tooltip: {
-                        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
                         padding: 10,
                         callbacks: {
                             label: function(context) {
@@ -960,27 +1058,38 @@ class SubscriptionDashboard {
                             }
                         },
                         titleFont: {
-                            family: "'Poppins', sans-serif",
+                            family: 'Poppins',
                             size: 14
                         },
                         bodyFont: {
-                            family: "'Poppins', sans-serif",
+                            family: 'Poppins',
                             size: 12
                         }
                     }
-                }
+                },
+                cutout: '60%'
             }
         });
+    }
+
+    // Update chart based on period selection
+    updateChart(chartCard, period) {
+        // Update chart based on period selection
+        this.updateCharts(period);
     }
     
     // Update pagination info
     updatePaginationInfo() {
-        document.getElementById('showing-start').textContent = ((this.currentPage - 1) * this.pageSize) + 1;
+        const startElement = document.getElementById('showing-start');
+        const endElement = document.getElementById('showing-end');
+        const totalElement = document.getElementById('total-subs-count');
+        
+        if (startElement) startElement.textContent = ((this.currentPage - 1) * this.pageSize) + 1;
         
         const end = Math.min(this.currentPage * this.pageSize, this.totalSubscriptions);
-        document.getElementById('showing-end').textContent = end;
+        if (endElement) endElement.textContent = end;
         
-        document.getElementById('total-subs-count').textContent = this.totalSubscriptions;
+        if (totalElement) totalElement.textContent = this.totalSubscriptions;
     }
     
     // Update pagination controls
@@ -1037,7 +1146,8 @@ class SubscriptionDashboard {
     
     // Next page
     nextPage() {
-        if (document.getElementById('next-page').disabled) return;
+        const nextBtn = document.getElementById('next-page');
+        if (nextBtn && nextBtn.disabled) return;
         
         this.currentPage++;
         this.loadSubscriptions('next');
@@ -1045,7 +1155,8 @@ class SubscriptionDashboard {
     
     // Previous page
     previousPage() {
-        if (document.getElementById('prev-page').disabled) return;
+        const prevBtn = document.getElementById('prev-page');
+        if (prevBtn && prevBtn.disabled) return;
         
         this.currentPage--;
         this.loadSubscriptions('prev');
@@ -1073,11 +1184,17 @@ class SubscriptionDashboard {
         };
         
         // Reset filter form
-        document.getElementById('status-filter').value = 'all';
-        document.getElementById('duration-filter').value = 'all';
-      document.getElementById('date-from').value = '';
-        document.getElementById('date-to').value = '';
-        document.getElementById('subscription-search').value = '';
+        const statusFilter = document.getElementById('status-filter');
+        const durationFilter = document.getElementById('duration-filter');
+        const dateFrom = document.getElementById('date-from');
+        const dateTo = document.getElementById('date-to');
+        const subscriptionSearch = document.getElementById('subscription-search');
+        
+        if (statusFilter) statusFilter.value = 'all';
+        if (durationFilter) durationFilter.value = 'all';
+        if (dateFrom) dateFrom.value = '';
+        if (dateTo) dateTo.value = '';
+        if (subscriptionSearch) subscriptionSearch.value = '';
         
         // Apply reset filters
         this.applyFilters();
@@ -1203,7 +1320,7 @@ class SubscriptionDashboard {
                 defaultExpiry.setDate(defaultExpiry.getDate() + 365);
                 document.getElementById('subscription-expiry').valueAsDate = defaultExpiry;
                 
-                document.getElementById('subscription-duration').value = '365';
+                document.getElementById('subscription-duration').value = 365;
                 document.getElementById('subscription-notes').value = '';
             }
             
@@ -1395,7 +1512,9 @@ class SubscriptionDashboard {
     showBatchActivateModal() {
         // Set default expiry date based on selected duration
         const durationSelect = document.getElementById('batch-duration');
-        this.updateBatchExpiryDate(parseInt(durationSelect.value));
+        if (durationSelect) {
+            this.updateBatchExpiryDate(parseInt(durationSelect.value));
+        }
         
         // Show modal
         this.showModal('batchActivateModal');
@@ -1598,6 +1717,7 @@ class SubscriptionDashboard {
         const modal = document.getElementById(modalId);
         if (modal) {
             modal.style.display = 'block';
+            modal.classList.add('active');
         }
     }
     
@@ -1606,13 +1726,15 @@ class SubscriptionDashboard {
         const modal = document.getElementById(modalId);
         if (modal) {
             modal.style.display = 'none';
+            modal.classList.remove('active');
         }
     }
     
     // Close all modals
     closeAllModals() {
-        document.querySelectorAll('.admin-modal').forEach(modal => {
+        document.querySelectorAll('.modal').forEach(modal => {
             modal.style.display = 'none';
+            modal.classList.remove('active');
         });
     }
     
@@ -1629,22 +1751,42 @@ class SubscriptionDashboard {
     
     // Show toast notification
     showToast(message, type = 'info') {
+        // Check if there's a global showToast function
+        if (typeof window.showToast === 'function') {
+            window.showToast(message, type);
+            return;
+        }
+        
         // Create toast element
         const toast = document.createElement('div');
         toast.className = `toast toast-${type}`;
-        toast.textContent = message;
+        
+        const icon = this.getToastIcon(type);
+        toast.innerHTML = `
+            <i class="${icon}"></i>
+            <span>${message}</span>
+        `;
+        
         document.body.appendChild(toast);
         
-        // Show toast with animation
+        // Show toast
+        setTimeout(() => toast.classList.add('show'), 100);
+        
+        // Hide toast
         setTimeout(() => {
-            toast.classList.add('show');
-            setTimeout(() => {
-                toast.classList.remove('show');
-                setTimeout(() => {
-                    document.body.removeChild(toast);
-                }, 300);
-            }, 3000);
-        }, 100);
+            toast.classList.remove('show');
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+
+    getToastIcon(type) {
+        const icons = {
+            success: 'fas fa-check-circle',
+            error: 'fas fa-exclamation-circle',
+            warning: 'fas fa-exclamation-triangle',
+            info: 'fas fa-info-circle'
+        };
+        return icons[type] || icons.info;
     }
 }
 
