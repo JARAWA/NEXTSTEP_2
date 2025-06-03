@@ -9,155 +9,229 @@
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="../css/main.css">
-    <link rel="stylesheet" href="css/admin.css">
+    <link rel="stylesheet" href="css/admin-dashboard.css">
+    <link rel="stylesheet" href="css/sidebar-fix.css">
 </head>
-<body class="admin-body">
+<body>
     <div class="admin-container">
-        <!-- Admin Sidebar -->
-        <div class="admin-sidebar">
-            <div class="logo-container">
-                <img src="../admin/images/nextstep_logo.jpeg" alt="NextStep Logo" class="admin-logo">
-                <h2>NextStep</h2>
-                <p>Admin Panel</p>
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-container">
+                    <img src="images/nextstep_logo.jpeg" alt="NextStep Logo" class="logo">
+                    <div class="logo-text">
+                        <h2>NextStep</h2>
+                        <span>Admin Panel</span>
+                    </div>
+                </div>
             </div>
-            
-            <nav class="admin-nav">
-                <ul>
-                    <li><a href="dashboard.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
-                    <li class="active"><a href="users.html"><i class="fas fa-users"></i> User Management</a></li>
-                    <li><a href="subscription-dashboard.html"><i class="fas fa-crown"></i> Subscriptions</a></li>
-                    <li><a href="college-data.html"><i class="fas fa-university"></i> College Data</a></li>
-                    <li><a href="analytics.html"><i class="fas fa-chart-bar"></i> Analytics</a></li>
-                    <li><a href="settings.html"><i class="fas fa-cog"></i> Settings</a></li>
+
+            <nav class="sidebar-nav">
+                <ul class="nav-list">
+                    <li class="nav-item">
+                        <a href="dashboard.html" class="nav-link">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li class="nav-item active">
+                        <a href="users.html" class="nav-link">
+                            <i class="fas fa-users"></i>
+                            <span>User Management</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="subscription-dashboard.html" class="nav-link">
+                            <i class="fas fa-crown"></i>
+                            <span>Subscriptions</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="college-data.html" class="nav-link">
+                            <i class="fas fa-university"></i>
+                            <span>College Data</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="analytics.html" class="nav-link">
+                            <i class="fas fa-chart-bar"></i>
+                            <span>Analytics</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="settings.html" class="nav-link">
+                            <i class="fas fa-cog"></i>
+                            <span>Settings</span>
+                        </a>
+                    </li>
                 </ul>
+
+                <div class="nav-footer">
+                    <a href="../index.html" class="nav-link home-btn">
+                        <i class="fas fa-home"></i>
+                        <span>Back to Home</span>
+                    </a>
+                    <button class="nav-link logout-btn" id="logout-btn">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Logout</span>
+                    </button>
+                </div>
             </nav>
-            
-            <div class="admin-sidebar-footer">
-                <a href="../index.html"><i class="fas fa-home"></i> Back to Site</a>
-                <button id="admin-logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</button>
-            </div>
-        </div>
-        
-        <!-- Admin Content -->
-        <div class="admin-content">
-            <!-- Admin Header -->
-            <header class="admin-header">
-                <div class="header-search">
-                    <i class="fas fa-search"></i>
-                    <input type="text" id="user-search" placeholder="Search users by name or email...">
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-left">
+                    <button class="sidebar-toggle" id="sidebar-toggle">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <div class="search-container">
+                        <i class="fas fa-search"></i>
+                        <input type="text" placeholder="Search users..." class="search-input" id="user-search">
+                    </div>
                 </div>
                 
                 <div class="header-right">
                     <div class="notifications">
-                        <i class="fas fa-bell"></i>
-                        <span class="badge">3</span>
+                        <button class="notification-btn">
+                            <i class="fas fa-bell"></i>
+                            <span class="notification-badge">3</span>
+                        </button>
                     </div>
                     
-                    <div class="admin-profile">
-                        <img src="../admin/images/avatar-placeholder.png" alt="Admin" class="avatar">
-                        <span class="admin-name">Admin Name</span>
+                    <div class="user-profile">
+                        <img src="images/avatar-placeholder.png" alt="Admin" class="profile-avatar">
+                        <div class="profile-info">
+                            <span class="profile-name">Admin User</span>
+                            <span class="profile-role">Administrator</span>
+                        </div>
                         <i class="fas fa-chevron-down"></i>
                     </div>
                 </div>
             </header>
-            
-            <!-- User Management Content -->
-            <main class="dashboard-main">
+
+            <!-- Dashboard Content -->
+            <div class="dashboard-content">
                 <div class="page-header">
                     <h1>User Management</h1>
+                    <p class="page-subtitle">Manage and monitor all NextStep users</p>
                     <div class="header-actions">
-                        <button class="btn-primary" id="add-user-btn">
+                        <button class="btn primary" id="add-user-btn">
                             <i class="fas fa-user-plus"></i> Add User
                         </button>
-                        <button class="btn-secondary" id="export-users-btn">
+                        <button class="btn secondary" id="export-users-btn">
                             <i class="fas fa-file-export"></i> Export
                         </button>
                     </div>
                 </div>
                 
                 <!-- Filter Section -->
-                <div class="filter-section">
-                    <div class="filter-container">
-                        <div class="filter-group">
-                            <label for="role-filter">Role</label>
-                            <select id="role-filter">
-                                <option value="all">All Roles</option>
-                                <option value="student">Student</option>
-                                <option value="admin">Admin</option>
-                            </select>
-                        </div>
-                        
-                        <div class="filter-group">
-                            <label for="exam-filter">Exam Type</label>
-                            <select id="exam-filter">
-                                <option value="all">All Exams</option>
-                                <option value="JeeMain">JEE Main</option>
-                                <option value="JeeAdvanced">JEE Advanced</option>
-                                <option value="Mhtcet">MHT-CET</option>
-                                <option value="Neet">NEET-UG</option>
-                            </select>
-                        </div>
-                        
-                        <div class="filter-group">
-                            <label for="status-filter">Status</label>
-                            <select id="status-filter">
-                                <option value="all">All Status</option>
-                                <option value="active">Active</option>
-                                <option value="inactive">Inactive</option>
-                                <option value="unverified">Unverified Email</option>
-                            </select>
-                        </div>
-                        
-                        <div class="filter-group">
-                            <label for="subscription-filter">Subscription</label>
-                            <select id="subscription-filter">
-                                <option value="all">All</option>
-                                <option value="premium">Premium</option>
-                                <option value="expired">Expired</option>
-                                <option value="none">No Subscription</option>
-                            </select>
-                        </div>
-                        
-                        <div class="filter-group date-filter">
-                            <label for="date-filter">Registration Date</label>
-                            <div class="date-inputs">
-                                <input type="date" id="date-from" placeholder="From">
-                                <span>to</span>
-                                <input type="date" id="date-to" placeholder="To">
+                <div class="content-card">
+                    <div class="card-header">
+                        <h3>
+                            <i class="fas fa-filter"></i>
+                            Filters
+                        </h3>
+                    </div>
+                    <div class="card-content">
+                        <div class="filter-section">
+                            <div class="filter-container">
+                                <div class="filter-group">
+                                    <label for="role-filter">Role</label>
+                                    <select id="role-filter" class="filter-select">
+                                        <option value="all">All Roles</option>
+                                        <option value="student">Student</option>
+                                        <option value="admin">Admin</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="filter-group">
+                                    <label for="exam-filter">Exam Type</label>
+                                    <select id="exam-filter" class="filter-select">
+                                        <option value="all">All Exams</option>
+                                        <option value="JeeMain">JEE Main</option>
+                                        <option value="JeeAdvanced">JEE Advanced</option>
+                                        <option value="Mhtcet">MHT-CET</option>
+                                        <option value="Neet">NEET-UG</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="filter-group">
+                                    <label for="status-filter">Status</label>
+                                    <select id="status-filter" class="filter-select">
+                                        <option value="all">All Status</option>
+                                        <option value="active">Active</option>
+                                        <option value="inactive">Inactive</option>
+                                        <option value="unverified">Unverified Email</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="filter-group">
+                                    <label for="subscription-filter">Subscription</label>
+                                    <select id="subscription-filter" class="filter-select">
+                                        <option value="all">All</option>
+                                        <option value="premium">Premium</option>
+                                        <option value="expired">Expired</option>
+                                        <option value="none">No Subscription</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="filter-group date-filter">
+                                    <label>Registration Date</label>
+                                    <div class="date-inputs">
+                                        <input type="date" id="date-from" class="filter-input" placeholder="From">
+                                        <span>to</span>
+                                        <input type="date" id="date-to" class="filter-input" placeholder="To">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="filter-actions">
+                                <button id="apply-filters" class="btn primary">Apply Filters</button>
+                                <button id="clear-filters" class="btn secondary">Clear Filters</button>
                             </div>
                         </div>
-                    </div>
-                    
-                    <div class="filter-actions">
-                        <button id="apply-filters" class="btn-primary">Apply Filters</button>
-                        <button id="clear-filters" class="btn-secondary">Clear Filters</button>
                     </div>
                 </div>
                 
                 <!-- Users Table -->
-                <div class="admin-table-container">
-                    <table class="admin-table" id="users-table">
-                        <thead>
-                            <tr>
-                                <th><input type="checkbox" id="select-all-users"></th>
-                                <th>Name <i class="fas fa-sort"></i></th>
-                                <th>Email <i class="fas fa-sort"></i></th>
-                                <th>Mobile</th>
-                                <th>Exams</th>
-                                <th>Registered <i class="fas fa-sort"></i></th>
-                                <th>Role</th>
-                                <th>Status</th>
-                                <th>Subscription</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td colspan="10" class="loading-cell">Loading users...</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                <div class="content-card">
+                    <div class="card-header">
+                        <h3>
+                            <i class="fas fa-users"></i>
+                            All Users
+                        </h3>
+                    </div>
+                    <div class="card-content">
+                        <div class="table-container">
+                            <table class="data-table" id="users-table">
+                                <thead>
+                                    <tr>
+                                        <th><input type="checkbox" id="select-all-users"></th>
+                                        <th>Name <i class="fas fa-sort"></i></th>
+                                        <th>Email <i class="fas fa-sort"></i></th>
+                                        <th>Mobile</th>
+                                        <th>Exams</th>
+                                        <th>Registered <i class="fas fa-sort"></i></th>
+                                        <th>Role</th>
+                                        <th>Status</th>
+                                        <th>Subscription</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td colspan="10" class="loading-state">
+                                            <div class="loading-spinner"></div>
+                                            Loading users...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
                 
                 <!-- Pagination -->
@@ -208,18 +282,18 @@
                         </button>
                     </div>
                 </div>
-            </main>
-        </div>
+            </div>
+        </main>
     </div>
     
     <!-- User Edit Modal -->
-    <div id="userEditModal" class="admin-modal">
-        <div class="admin-modal-content large-modal">
-            <div class="admin-modal-header">
+    <div id="userEditModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
                 <h2>Edit User</h2>
-                <button class="admin-modal-close">&times;</button>
+                <button class="modal-close">&times;</button>
             </div>
-            <div class="admin-modal-body">
+            <div class="modal-body">
                 <form id="edit-user-form">
                     <input type="hidden" id="edit-user-id">
                     
@@ -367,8 +441,8 @@
                     </div>
                     
                     <div class="modal-actions">
-                        <button type="button" class="btn-secondary cancel-btn">Cancel</button>
-                        <button type="submit" class="btn-primary save-btn">Save Changes</button>
+                        <button type="button" class="btn secondary cancel-btn">Cancel</button>
+                        <button type="submit" class="btn primary save-btn">Save Changes</button>
                     </div>
                 </form>
             </div>
@@ -376,13 +450,13 @@
     </div>
     
     <!-- Add User Modal -->
-    <div id="addUserModal" class="admin-modal">
-        <div class="admin-modal-content large-modal">
-            <div class="admin-modal-header">
+    <div id="addUserModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
                 <h2>Add New User</h2>
-                <button class="admin-modal-close">&times;</button>
+                <button class="modal-close">&times;</button>
             </div>
-            <div class="admin-modal-body">
+            <div class="modal-body">
                 <form id="add-user-form">
                     <!-- Add user form fields similar to edit user but with password -->
                     <!-- Form content will be dynamically loaded -->
@@ -392,13 +466,13 @@
     </div>
     
     <!-- Subscription Management Modal -->
-    <div id="subscriptionModal" class="admin-modal">
-        <div class="admin-modal-content medium-modal">
-            <div class="admin-modal-header">
+    <div id="subscriptionModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
                 <h2>Manage Subscription</h2>
-                <button class="admin-modal-close">&times;</button>
+                <button class="modal-close">&times;</button>
             </div>
-            <div class="admin-modal-body">
+            <div class="modal-body">
                 <form id="subscription-form">
                     <input type="hidden" id="subscription-user-id">
                     
@@ -443,8 +517,8 @@
                     </div>
                     
                     <div class="modal-actions">
-                        <button type="button" class="btn-secondary cancel-btn">Cancel</button>
-                        <button type="submit" class="btn-primary save-btn">Save Changes</button>
+                        <button type="button" class="btn secondary cancel-btn">Cancel</button>
+                        <button type="submit" class="btn primary save-btn">Save Changes</button>
                     </div>
                 </form>
             </div>
@@ -452,13 +526,13 @@
     </div>
     
     <!-- Bulk Subscription Modal -->
-    <div id="bulkSubscriptionModal" class="admin-modal">
-        <div class="admin-modal-content medium-modal">
-            <div class="admin-modal-header">
+    <div id="bulkSubscriptionModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
                 <h2>Bulk Activate Subscriptions</h2>
-                <button class="admin-modal-close">&times;</button>
+                <button class="modal-close">&times;</button>
             </div>
-            <div class="admin-modal-body">
+            <div class="modal-body">
                 <form id="bulk-subscription-form">
                     <p class="modal-message">
                         You are about to activate premium subscriptions for <span id="bulk-selected-count">0</span> users.
@@ -486,8 +560,8 @@
                     </div>
                     
                     <div class="modal-actions">
-                        <button type="button" class="btn-secondary cancel-btn">Cancel</button>
-                        <button type="submit" class="btn-primary save-btn">Activate Subscriptions</button>
+                        <button type="button" class="btn secondary cancel-btn">Cancel</button>
+                        <button type="submit" class="btn primary save-btn">Activate Subscriptions</button>
                     </div>
                 </form>
             </div>
@@ -495,31 +569,29 @@
     </div>
     
     <!-- Confirmation Modal -->
-    <div id="confirmationModal" class="admin-modal">
-        <div class="admin-modal-content small-modal">
-            <div class="admin-modal-header">
+    <div id="confirmationModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
                 <h2>Confirm Action</h2>
-                <button class="admin-modal-close">&times;</button>
+                <button class="modal-close">&times;</button>
             </div>
-            <div class="admin-modal-body">
+            <div class="modal-body">
                 <p id="confirmation-message">Are you sure you want to perform this action?</p>
                 
                 <div class="modal-actions">
-                    <button class="btn-secondary cancel-btn">Cancel</button>
-                    <button class="btn-danger confirm-btn">Confirm</button>
+                    <button class="btn secondary cancel-btn">Cancel</button>
+                    <button class="btn danger confirm-btn">Confirm</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Firebase and Scripts -->
+    <!-- Firebase Scripts -->
     <script type="module">
-      // Import the functions you need from the SDKs you need
       import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
       import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js";
       import { getFirestore } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
 
-      // Your web app's Firebase configuration
       const firebaseConfig = {
         apiKey: "AIzaSyC7tvZe9NeHRhYuTVrQnkaSG7Nkj3ZS40U",
         authDomain: "nextstep-log.firebaseapp.com",
@@ -530,23 +602,21 @@
         measurementId: "G-BPGP3TBN3N"
       };
 
-      // Initialize Firebase
       const app = initializeApp(firebaseConfig);
       const auth = getAuth(app);
       const db = getFirestore(app);
 
-      // Export for other scripts
       window.firebaseAuth = auth;
       window.firebaseDb = db;
       
-      // Check authentication status for admin
       onAuthStateChanged(auth, (user) => {
         if (!user) {
-          // Redirect to login page if not authenticated
           window.location.href = '../index.html';
         }
       });
     </script>
     <script type="module" src="js/admin-users.js"></script>
+    <script type="module" src="js/mobile-enhancements.js"></script>
+    <script type="module" src="js/advanced-features.js"></script>
 </body>
 </html>
