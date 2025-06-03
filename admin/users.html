@@ -137,7 +137,7 @@
                     </div>
                     <div class="card-content">
                         <div class="filter-section">
-                            <div class="filter-container">
+                            <div class="filter-container horizontal-filters">
                                 <div class="filter-group">
                                     <label for="role-filter">Role</label>
                                     <select id="role-filter" class="filter-select">
@@ -186,11 +186,14 @@
                                         <input type="date" id="date-to" class="filter-input" placeholder="To">
                                     </div>
                                 </div>
-                            </div>
-                            
-                            <div class="filter-actions">
-                                <button id="apply-filters" class="btn primary">Apply Filters</button>
-                                <button id="clear-filters" class="btn secondary">Clear Filters</button>
+                                
+                                <div class="filter-group filter-actions-group">
+                                    <label>&nbsp;</label>
+                                    <div class="filter-actions">
+                                        <button id="apply-filters" class="btn primary">Apply</button>
+                                        <button id="clear-filters" class="btn secondary">Clear</button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
