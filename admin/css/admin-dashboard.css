@@ -2239,25 +2239,6 @@ body {
 
 /* Enhanced Modal Styles - Fixed Version */
 
-/* Improved Modal Base */
-.modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(8px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-    padding: 20px;
-    box-sizing: border-box;
-    animation: modalFadeIn 0.3s ease-out;
-    overflow-y: auto;
-}
-
 @keyframes modalFadeIn {
     from { opacity: 0; }
     to { opacity: 1; }
