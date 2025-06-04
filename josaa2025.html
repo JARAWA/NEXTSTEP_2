@@ -70,6 +70,8 @@
                         linear-gradient(-45deg, rgba(212, 175, 55, 0.1) 25%, transparent 25%);
             background-size: 60px 60px;
             opacity: 0.1;
+            pointer-events: none; /* CRITICAL: Allow clicks to pass through */
+            z-index: 1;
         }
 
         .logo-img {
@@ -408,6 +410,9 @@
             font-size: 1rem;
             font-family: 'Poppins', sans-serif;
             min-width: 200px;
+            position: relative; /* Ensure proper stacking */
+            z-index: 10; /* Above header pseudo-element */
+            pointer-events: auto; /* Ensure clicks work */
         }
         
         .nav-button:hover {
@@ -454,6 +459,9 @@
             border: none;
             font-size: 1rem;
             font-family: 'Poppins', sans-serif;
+            position: relative; /* Ensure proper stacking */
+            z-index: 10; /* Above header pseudo-element */
+            pointer-events: auto; /* Ensure clicks work */
         }
         
         .cta-button:hover {
@@ -530,7 +538,7 @@
             <img src="nextstep_logo.jpeg" alt="NextStep Logo" class="logo-img">
             <h1 class="tagline">JOSAA 2025 Counselling Process</h1>
             <p class="secondary-tagline">Complete Guide with Exact Dates & Step-by-Step Procedure</p>
-            <div style="margin-top: 30px; text-align: center;">
+            <div style="margin-top: 30px; text-align: center; position: relative; z-index: 10;">
                 <button type="button" class="nav-button" onclick="goToHomepage()">
                     <i class="fas fa-home"></i> Back to Homepage
                 </button>
