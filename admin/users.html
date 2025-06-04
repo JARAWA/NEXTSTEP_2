@@ -11,6 +11,67 @@
     <!-- Custom CSS -->
     <link rel="stylesheet" href="css/admin-dashboard.css">
     <link rel="stylesheet" href="css/sidebar-fix.css">
+    <style>
+        /* Subscription filter buttons styles */
+        .subscription-filter-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
+
+        .subscription-filter-btn {
+            padding: 8px 16px;
+            border: 2px solid #e0e7ff;
+            background: #f8fafc;
+            color: #64748b;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .subscription-filter-btn:hover {
+            border-color: #c7d2fe;
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        .subscription-filter-btn.active {
+            border-color: #3b82f6;
+            background: #3b82f6;
+            color: white;
+        }
+
+        .subscription-filter-btn i {
+            font-size: 12px;
+        }
+
+        .filter-group.subscription-buttons {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .filter-group.subscription-buttons label {
+            margin-bottom: 8px;
+        }
+
+        /* Responsive layout for filter buttons */
+        @media (max-width: 768px) {
+            .subscription-filter-buttons {
+                justify-content: flex-start;
+            }
+            
+            .subscription-filter-btn {
+                font-size: 13px;
+                padding: 6px 12px;
+            }
+        }
+    </style>
 </head>
 <body>
     <div class="admin-container">
@@ -168,14 +229,26 @@
                                     </select>
                                 </div>
                                 
-                                <div class="filter-group">
-                                    <label for="subscription-filter">Subscription</label>
-                                    <select id="subscription-filter" class="filter-select">
-                                        <option value="all">All</option>
-                                        <option value="premium">Premium</option>
-                                        <option value="expired">Expired</option>
-                                        <option value="none">No Subscription</option>
-                                    </select>
+                                <div class="filter-group subscription-buttons">
+                                    <label>Subscription</label>
+                                    <div class="subscription-filter-buttons">
+                                        <button class="subscription-filter-btn active" data-value="all">
+                                            <i class="fas fa-list"></i>
+                                            All
+                                        </button>
+                                        <button class="subscription-filter-btn" data-value="premium">
+                                            <i class="fas fa-crown"></i>
+                                            Premium
+                                        </button>
+                                        <button class="subscription-filter-btn" data-value="expired">
+                                            <i class="fas fa-clock"></i>
+                                            Expired
+                                        </button>
+                                        <button class="subscription-filter-btn" data-value="none">
+                                            <i class="fas fa-user"></i>
+                                            No Subscription
+                                        </button>
+                                    </div>
                                 </div>
                                 
                                 <div class="filter-group date-filter">
@@ -255,7 +328,7 @@
                             <option value="10">10</option>
                             <option value="25">25</option>
                             <option value="50">50</option>
-                            <option value="100">100</option>
+                            <option value="100" selected>100</option>
                         </select>
                         <span>per page</span>
                     </div>
