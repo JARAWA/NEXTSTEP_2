@@ -1028,117 +1028,184 @@
         // Enhanced homepage navigation function with extensive debugging
         function goToHomepage() {
             try {
-                console.log('🏠 goToHomepage() function called');
-                alert('🏠 Homepage button clicked! Attempting navigation...');
+                console.log('🏠 === HOMEPAGE NAVIGATION STARTED ===');
                 
-                // Get current location info
-                console.log('Current URL:', window.location.href);
-                console.log('Current origin:', window.location.origin);
-                console.log('Document referrer:', document.referrer);
+                // Immediate visual feedback
+                const banner = document.createElement('div');
+                banner.style.cssText = `
+                    position: fixed;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    background: #006B6B;
+                    color: white;
+                    padding: 20px;
+                    border-radius: 10px;
+                    z-index: 99999;
+                    font-family: Arial, sans-serif;
+                    text-align: center;
+                    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+                `;
+                banner.innerHTML = '🏠 Homepage Navigation Started!<br>Processing...';
+                document.body.appendChild(banner);
                 
-                // Method 1: Try browser back if there's a referrer
-                if (document.referrer && document.referrer.length > 0) {
-                    console.log('📱 Trying browser back...');
-                    if (confirm('Do you want to go back to the previous page?')) {
-                        window.history.back();
-                        return;
+                setTimeout(() => document.body.removeChild(banner), 3000);
+                
+                console.log('📱 Current URL:', window.location.href);
+                console.log('📱 Referrer:', document.referrer);
+                
+                // Simple navigation methods
+                const methods = [
+                    {
+                        name: 'Browser Back',
+                        action: () => {
+                            if (document.referrer && document.referrer.length > 0) {
+                                window.history.back();
+                                return true;
+                            }
+                            return false;
+                        }
+                    },
+                    {
+                        name: 'Root Directory',
+                        action: () => {
+                            window.location.href = '/';
+                            return true;
+                        }
+                    },
+                    {
+                        name: 'Index.html',
+                        action: () => {
+                            window.location.href = 'index.html';
+                            return true;
+                        }
+                    },
+                    {
+                        name: 'Parent Directory',
+                        action: () => {
+                            window.location.href = '../';
+                            return true;
+                        }
+                    }
+                ];
+                
+                // Try each method with user confirmation
+                let attempted = false;
+                for (let method of methods) {
+                    if (!attempted) {
+                        console.log(`🔄 Trying: ${method.name}`);
+                        if (confirm(`Try ${method.name} for homepage navigation?`)) {
+                            attempted = true;
+                            method.action();
+                            break;
+                        }
                     }
                 }
                 
-                // Method 2: Try common homepage URLs
-                const homepageUrls = [
-                    'index.html',
-                    '../index.html',
-                    '../../index.html',
-                    '/',
-                    window.location.origin + '/index.html',
-                    window.location.origin,
-                    'home.html',
-                    '../home.html'
-                ];
-                
-                console.log('🔍 Trying homepage URLs:', homepageUrls);
-                
-                // Show user the options
-                const urlChoice = prompt(
-                    'Choose homepage URL:\n' + 
-                    homepageUrls.map((url, index) => `${index + 1}. ${url}`).join('\n') + 
-                    '\nEnter number (1-' + homepageUrls.length + ') or custom URL:'
-                );
-                
-                if (urlChoice) {
-                    const choiceNum = parseInt(urlChoice);
-                    let targetUrl;
-                    
-                    if (choiceNum >= 1 && choiceNum <= homepageUrls.length) {
-                        targetUrl = homepageUrls[choiceNum - 1];
-                    } else {
-                        targetUrl = urlChoice;
-                    }
-                    
-                    console.log('🎯 Navigating to:', targetUrl);
-                    alert('🎯 Navigating to: ' + targetUrl);
-                    window.location.href = targetUrl;
-                } else {
-                    alert('❌ Navigation cancelled by user');
+                if (!attempted) {
+                    alert('❌ Navigation cancelled. You can manually navigate to your homepage.');
                 }
                 
             } catch (error) {
                 console.error('❌ Error in goToHomepage():', error);
-                alert('❌ Error: ' + error.message);
+                alert('❌ Navigation error: ' + error.message);
             }
         }
 
         // JOSAA portal navigation function with extensive debugging
         function openJOSAAPortal() {
             try {
-                console.log('🌐 openJOSAAPortal() function called');
-                alert('🌐 JOSAA Portal button clicked! Opening portal...');
+                console.log('🌐 === JOSAA PORTAL NAVIGATION STARTED ===');
+                
+                // Immediate visual feedback
+                const banner = document.createElement('div');
+                banner.style.cssText = `
+                    position: fixed;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    background: #D4AF37;
+                    color: black;
+                    padding: 20px;
+                    border-radius: 10px;
+                    z-index: 99999;
+                    font-family: Arial, sans-serif;
+                    text-align: center;
+                    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+                `;
+                banner.innerHTML = '🌐 Opening JOSAA Portal!<br>Please wait...';
+                document.body.appendChild(banner);
+                
+                setTimeout(() => {
+                    if (banner.parentNode) {
+                        document.body.removeChild(banner);
+                    }
+                }, 3000);
                 
                 const josaaUrl = 'https://josaa.nic.in';
                 console.log('🔗 Target URL:', josaaUrl);
                 
-                // Method 1: Try opening in new tab
-                console.log('📂 Attempting to open in new tab...');
+                // Method 1: Try window.open with extensive error handling
+                console.log('📂 Method 1: Attempting window.open...');
                 try {
                     const newWindow = window.open(josaaUrl, '_blank', 'noopener,noreferrer');
+                    console.log('🔍 Window.open result:', newWindow);
                     
-                    // Check if it worked
-                    setTimeout(() => {
-                        if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
-                            console.log('⚠️ New tab blocked or failed');
-                            alert('⚠️ Popup blocked! Trying alternative method...');
-                            
-                            // Method 2: Ask user preference
-                            if (confirm('Open JOSAA portal in this window? (OK = Same window, Cancel = Copy URL)')) {
-                                console.log('🔄 Opening in same window...');
-                                window.location.href = josaaUrl;
-                            } else {
-                                // Method 3: Copy to clipboard and show URL
-                                try {
-                                    navigator.clipboard.writeText(josaaUrl).then(() => {
-                                        alert('📋 URL copied to clipboard!\n\n' + josaaUrl + '\n\nPaste this in a new browser tab.');
-                                    }).catch(() => {
-                                        alert('📋 Please copy this URL manually:\n\n' + josaaUrl);
-                                    });
-                                } catch (clipboardError) {
-                                    alert('📋 Please copy this URL manually:\n\n' + josaaUrl);
+                    if (newWindow) {
+                        console.log('✅ New window created successfully');
+                        setTimeout(() => {
+                            try {
+                                if (newWindow.closed) {
+                                    console.log('⚠️ New window was closed (popup blocker?)');
+                                    openJOSAAFallback();
+                                } else {
+                                    console.log('✅ New window is still open');
                                 }
+                            } catch (e) {
+                                console.log('✅ Cannot check window status (likely opened successfully)');
                             }
-                        } else {
-                            console.log('✅ New tab opened successfully');
-                            alert('✅ JOSAA portal opened in new tab!');
-                        }
-                    }, 1000);
-                    
-                } catch (newTabError) {
-                    console.error('❌ Error opening new tab:', newTabError);
-                    throw newTabError;
+                        }, 1000);
+                    } else {
+                        console.log('❌ Window.open returned null (blocked)');
+                        openJOSAAFallback();
+                    }
+                } catch (openError) {
+                    console.error('❌ Window.open failed:', openError);
+                    openJOSAAFallback();
                 }
                 
             } catch (error) {
                 console.error('❌ Error in openJOSAAPortal():', error);
-                alert('❌ Error occurred. Please visit manually:\n\nhttps://josaa.nic.in');
+                openJOSAAFallback();
+            }
+        }
+        
+        // Fallback function for JOSAA portal
+        function openJOSAAFallback() {
+            console.log('🔄 Using fallback methods...');
+            const josaaUrl = 'https://josaa.nic.in';
+            
+            const choice = confirm(
+                '🌐 JOSAA Portal Options:\n\n' +
+                'OK = Open in this window\n' +
+                'Cancel = Copy URL to clipboard\n\n' +
+                'Choose your preferred method:'
+            );
+            
+            if (choice) {
+                console.log('🔄 Opening in same window...');
+                window.location.href = josaaUrl;
+            } else {
+                console.log('📋 Copying URL to clipboard...');
+                try {
+                    navigator.clipboard.writeText(josaaUrl).then(() => {
+                        alert('📋 JOSAA Portal URL copied to clipboard!\n\n' + josaaUrl + '\n\nPaste this in a new browser tab.');
+                    }).catch(() => {
+                        prompt('📋 Copy this URL manually:', josaaUrl);
+                    });
+                } catch (clipboardError) {
+                    prompt('📋 Copy this URL manually:', josaaUrl);
+                }
             }
         }
 
@@ -1214,38 +1281,120 @@
             alert('🔍 Diagnostics complete! Check browser console (F12) for detailed info.');
         }
 
-        // Force button functionality using multiple methods
+        // Force button functionality using multiple methods with real-time monitoring
         function forceButtonSetup() {
             console.log('🔧 Setting up button functionality...');
             
-            // Method 1: Direct onclick assignment
+            // Add global click monitoring
+            document.addEventListener('click', function(e) {
+                if (e.target.tagName === 'BUTTON') {
+                    console.log('🖱️ === BUTTON CLICK DETECTED ===');
+                    console.log('📍 Button text:', e.target.textContent.trim());
+                    console.log('📍 Button classes:', e.target.className);
+                    console.log('📍 Click coordinates:', e.clientX, e.clientY);
+                    console.log('📍 Event target:', e.target);
+                    
+                    // Show visual feedback for any button click
+                    const feedback = document.createElement('div');
+                    feedback.style.cssText = `
+                        position: fixed;
+                        top: ${e.clientY - 30}px;
+                        left: ${e.clientX - 50}px;
+                        background: #ff4444;
+                        color: white;
+                        padding: 5px 10px;
+                        border-radius: 5px;
+                        z-index: 99999;
+                        pointer-events: none;
+                        font-size: 12px;
+                        animation: fadeOut 2s forwards;
+                    `;
+                    feedback.textContent = '🖱️ CLICK!';
+                    document.body.appendChild(feedback);
+                    
+                    setTimeout(() => {
+                        if (feedback.parentNode) {
+                            document.body.removeChild(feedback);
+                        }
+                    }, 2000);
+                }
+            }, true); // Use capture phase
+            
+            // Method 1: Direct onclick assignment with monitoring
             const buttons = document.querySelectorAll('button');
-            buttons.forEach(button => {
+            buttons.forEach((button, index) => {
                 const text = button.textContent.toLowerCase();
                 
                 if (text.includes('homepage') || text.includes('home')) {
                     console.log('🏠 Setting up homepage button:', button.textContent.trim());
+                    
+                    // Multiple event assignment methods
                     button.onclick = function(e) {
+                        console.log('🏠 === HOMEPAGE ONCLICK TRIGGERED ===');
                         e.preventDefault();
-                        console.log('🏠 Direct onclick triggered');
+                        e.stopPropagation();
                         goToHomepage();
                         return false;
                     };
+                    
+                    // Backup addEventListener
+                    button.addEventListener('click', function(e) {
+                        console.log('🏠 === HOMEPAGE CLICK LISTENER TRIGGERED ===');
+                        e.preventDefault();
+                        e.stopPropagation();
+                        goToHomepage();
+                    }, { once: false, passive: false });
                 }
                 
                 if (text.includes('josaa') || text.includes('portal')) {
                     console.log('🌐 Setting up JOSAA button:', button.textContent.trim());
+                    
+                    // Multiple event assignment methods
                     button.onclick = function(e) {
+                        console.log('🌐 === JOSAA ONCLICK TRIGGERED ===');
                         e.preventDefault();
-                        console.log('🌐 Direct onclick triggered');
+                        e.stopPropagation();
                         openJOSAAPortal();
                         return false;
                     };
+                    
+                    // Backup addEventListener
+                    button.addEventListener('click', function(e) {
+                        console.log('🌐 === JOSAA CLICK LISTENER TRIGGERED ===');
+                        e.preventDefault();
+                        e.stopPropagation();
+                        openJOSAAPortal();
+                    }, { once: false, passive: false });
                 }
+                
+                // Add visual feedback for all buttons
+                button.addEventListener('mousedown', function() {
+                    this.style.background = '#ff4444';
+                    console.log('🖱️ Mouse down on:', this.textContent.trim());
+                });
+                
+                button.addEventListener('mouseup', function() {
+                    this.style.background = '';
+                    console.log('🖱️ Mouse up on:', this.textContent.trim());
+                });
             });
             
             // Method 2: Event listeners (backup)
             initializeButtons();
+            
+            // Method 3: Force override any existing handlers
+            setTimeout(() => {
+                buttons.forEach(button => {
+                    const text = button.textContent.toLowerCase();
+                    if (text.includes('homepage') || text.includes('home')) {
+                        button.setAttribute('onclick', 'goToHomepage(); return false;');
+                    }
+                    if (text.includes('josaa') || text.includes('portal')) {
+                        button.setAttribute('onclick', 'openJOSAAPortal(); return false;');
+                    }
+                });
+                console.log('🔧 Forced onclick attributes set');
+            }, 1000);
             
             console.log('✅ Button setup complete');
         }
