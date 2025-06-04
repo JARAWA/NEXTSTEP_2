@@ -1035,6 +1035,13 @@
 
         // Enhanced homepage navigation function with extensive debugging
         function goToHomepage() {
+            // Prevent multiple simultaneous calls
+            if (window.homepageNavigationInProgress) {
+                console.log('🏠 Navigation already in progress, ignoring duplicate call');
+                return;
+            }
+            window.homepageNavigationInProgress = true;
+            
             try {
                 console.log('🏠 === HOMEPAGE NAVIGATION STARTED ===');
                 
@@ -1054,74 +1061,45 @@
                     text-align: center;
                     box-shadow: 0 4px 20px rgba(0,0,0,0.5);
                 `;
-                banner.innerHTML = '🏠 Homepage Navigation Started!<br>Processing...';
+                banner.innerHTML = '🏠 Navigating to Homepage...<br>Please wait...';
                 document.body.appendChild(banner);
-                
-                setTimeout(() => document.body.removeChild(banner), 3000);
                 
                 console.log('📱 Current URL:', window.location.href);
                 console.log('📱 Referrer:', document.referrer);
                 
-                // Simple navigation methods
-                const methods = [
-                    {
-                        name: 'Browser Back',
-                        action: () => {
-                            if (document.referrer && document.referrer.length > 0) {
-                                window.history.back();
-                                return true;
-                            }
-                            return false;
-                        }
-                    },
-                    {
-                        name: 'Root Directory',
-                        action: () => {
-                            window.location.href = '/';
-                            return true;
-                        }
-                    },
-                    {
-                        name: 'Index.html',
-                        action: () => {
-                            window.location.href = 'index.html';
-                            return true;
-                        }
-                    },
-                    {
-                        name: 'Parent Directory',
-                        action: () => {
-                            window.location.href = '../';
-                            return true;
-                        }
-                    }
-                ];
-                
-                // Try each method with user confirmation
-                let attempted = false;
-                for (let method of methods) {
-                    if (!attempted) {
-                        console.log(`🔄 Trying: ${method.name}`);
-                        if (confirm(`Try ${method.name} for homepage navigation?`)) {
-                            attempted = true;
-                            method.action();
-                            break;
-                        }
-                    }
+                // Method 1: Browser back (if coming from same domain)
+                if (document.referrer && document.referrer.includes('nextstepedu.co.in') && document.referrer !== window.location.href) {
+                    console.log('🔄 Using browser back to:', document.referrer);
+                    setTimeout(() => {
+                        window.history.back();
+                        window.homepageNavigationInProgress = false;
+                    }, 1000);
+                    return;
                 }
                 
-                if (!attempted) {
-                    alert('❌ Navigation cancelled. You can manually navigate to your homepage.');
-                }
+                // Method 2: Try root directory
+                console.log('🔄 Navigating to root directory');
+                setTimeout(() => {
+                    window.location.href = 'https://nextstepedu.co.in/';
+                    window.homepageNavigationInProgress = false;
+                }, 1000);
                 
             } catch (error) {
                 console.error('❌ Error in goToHomepage():', error);
+                window.homepageNavigationInProgress = false;
                 alert('❌ Navigation error: ' + error.message);
             }
         }
 
         // JOSAA portal navigation function with extensive debugging
         function openJOSAAPortal() {
+            // Prevent multiple simultaneous calls
+            if (window.josaaNavigationInProgress) {
+                console.log('🌐 JOSAA navigation already in progress, ignoring duplicate call');
+                return;
+            }
+            window.josaaNavigationInProgress = true;
+            
             try {
                 console.log('🌐 === JOSAA PORTAL NAVIGATION STARTED ===');
                 
@@ -1144,76 +1122,37 @@
                 banner.innerHTML = '🌐 Opening JOSAA Portal!<br>Please wait...';
                 document.body.appendChild(banner);
                 
-                setTimeout(() => {
-                    if (banner.parentNode) {
-                        document.body.removeChild(banner);
-                    }
-                }, 3000);
-                
                 const josaaUrl = 'https://josaa.nic.in';
                 console.log('🔗 Target URL:', josaaUrl);
                 
-                // Method 1: Try window.open with extensive error handling
-                console.log('📂 Method 1: Attempting window.open...');
-                try {
-                    const newWindow = window.open(josaaUrl, '_blank', 'noopener,noreferrer');
-                    console.log('🔍 Window.open result:', newWindow);
-                    
-                    if (newWindow) {
-                        console.log('✅ New window created successfully');
-                        setTimeout(() => {
-                            try {
-                                if (newWindow.closed) {
-                                    console.log('⚠️ New window was closed (popup blocker?)');
-                                    openJOSAAFallback();
-                                } else {
-                                    console.log('✅ New window is still open');
-                                }
-                            } catch (e) {
-                                console.log('✅ Cannot check window status (likely opened successfully)');
+                // Simple and reliable method: open in new tab
+                setTimeout(() => {
+                    try {
+                        const newWindow = window.open(josaaUrl, '_blank', 'noopener,noreferrer');
+                        if (newWindow) {
+                            console.log('✅ JOSAA portal opened in new tab');
+                        } else {
+                            console.log('⚠️ Popup blocked, trying same window');
+                            if (confirm('Popup blocked! Open JOSAA portal in this window?')) {
+                                window.location.href = josaaUrl;
                             }
-                        }, 1000);
-                    } else {
-                        console.log('❌ Window.open returned null (blocked)');
-                        openJOSAAFallback();
+                        }
+                    } catch (error) {
+                        console.log('❌ Error opening new tab, using same window');
+                        window.location.href = josaaUrl;
                     }
-                } catch (openError) {
-                    console.error('❌ Window.open failed:', openError);
-                    openJOSAAFallback();
-                }
+                    
+                    // Remove banner
+                    if (banner.parentNode) {
+                        document.body.removeChild(banner);
+                    }
+                    window.josaaNavigationInProgress = false;
+                }, 1000);
                 
             } catch (error) {
                 console.error('❌ Error in openJOSAAPortal():', error);
-                openJOSAAFallback();
-            }
-        }
-        
-        // Fallback function for JOSAA portal
-        function openJOSAAFallback() {
-            console.log('🔄 Using fallback methods...');
-            const josaaUrl = 'https://josaa.nic.in';
-            
-            const choice = confirm(
-                '🌐 JOSAA Portal Options:\n\n' +
-                'OK = Open in this window\n' +
-                'Cancel = Copy URL to clipboard\n\n' +
-                'Choose your preferred method:'
-            );
-            
-            if (choice) {
-                console.log('🔄 Opening in same window...');
-                window.location.href = josaaUrl;
-            } else {
-                console.log('📋 Copying URL to clipboard...');
-                try {
-                    navigator.clipboard.writeText(josaaUrl).then(() => {
-                        alert('📋 JOSAA Portal URL copied to clipboard!\n\n' + josaaUrl + '\n\nPaste this in a new browser tab.');
-                    }).catch(() => {
-                        prompt('📋 Copy this URL manually:', josaaUrl);
-                    });
-                } catch (clipboardError) {
-                    prompt('📋 Copy this URL manually:', josaaUrl);
-                }
+                window.josaaNavigationInProgress = false;
+                alert('❌ Error occurred. Please visit: https://josaa.nic.in');
             }
         }
 
@@ -1503,7 +1442,7 @@
             // Add test button for debugging
             addTestButton();
             
-            // Force button setup
+            // Clean button setup (no duplicates)
             setTimeout(() => {
                 forceButtonSetup();
                 
@@ -1533,7 +1472,7 @@
                 console.log('  Alt+J: Open JOSAA portal');
                 console.log('  Alt+D: Run diagnostics');
                 console.log('🧪 Red test button added to top-right corner');
-                console.log('💡 If buttons still don\'t work, try keyboard shortcuts or test button');
+                console.log('💡 Buttons should now work without duplicates!');
                 
             }, 500);
         });
