@@ -1019,76 +1019,257 @@
     </main>
 
     <script>
-        // Enhanced homepage navigation function
-        function goToHomepage() {
-            console.log('Navigating to homepage...');
-            
-            // Check if there's a referrer from the same domain
-            if (document.referrer && document.referrer.includes(window.location.hostname)) {
-                console.log('Going back to referrer:', document.referrer);
-                window.history.back();
-                return;
-            }
-            
-            // Try common homepage URLs in order of preference
-            const homepageUrls = [
-                'index.html',
-                '../index.html',
-                '../../index.html',
-                '/',
-                window.location.origin + '/index.html',
-                window.location.origin
-            ];
-            
-            // Try to navigate to the first available homepage
-            let currentIndex = 0;
-            
-            function tryNextUrl() {
-                if (currentIndex >= homepageUrls.length) {
-                    // If all attempts fail, show an alert
-                    alert('Unable to navigate to homepage. Please use your browser\'s back button or navigate manually.');
-                    return;
-                }
-                
-                const url = homepageUrls[currentIndex];
-                console.log('Trying homepage URL:', url);
-                
-                try {
-                    window.location.href = url;
-                } catch (error) {
-                    console.log('Failed to navigate to:', url);
-                    currentIndex++;
-                    setTimeout(tryNextUrl, 100);
-                }
-            }
-            
-            tryNextUrl();
+        // Debug function to test if JavaScript is working
+        function testJavaScript() {
+            alert('✅ JavaScript is working! Button click detected.');
+            console.log('✅ JavaScript test successful');
         }
 
-        // JOSAA portal navigation function
-        function openJOSAAPortal() {
-            console.log('Opening JOSAA portal...');
-            const josaaUrl = 'https://josaa.nic.in';
-            
+        // Enhanced homepage navigation function with extensive debugging
+        function goToHomepage() {
             try {
-                // Open in new tab/window
-                const newWindow = window.open(josaaUrl, '_blank', 'noopener,noreferrer');
+                console.log('🏠 goToHomepage() function called');
+                alert('🏠 Homepage button clicked! Attempting navigation...');
                 
-                // Check if popup was blocked
-                if (!newWindow || newWindow.closed || typeof newWindow.closed == 'undefined') {
-                    // Fallback: navigate in same window
-                    console.log('Popup blocked, navigating in same window');
-                    if (confirm('The JOSAA portal will open in this window. Click OK to continue or Cancel to stay on this page.')) {
-                        window.location.href = josaaUrl;
+                // Get current location info
+                console.log('Current URL:', window.location.href);
+                console.log('Current origin:', window.location.origin);
+                console.log('Document referrer:', document.referrer);
+                
+                // Method 1: Try browser back if there's a referrer
+                if (document.referrer && document.referrer.length > 0) {
+                    console.log('📱 Trying browser back...');
+                    if (confirm('Do you want to go back to the previous page?')) {
+                        window.history.back();
+                        return;
                     }
-                } else {
-                    console.log('JOSAA portal opened in new tab');
                 }
+                
+                // Method 2: Try common homepage URLs
+                const homepageUrls = [
+                    'index.html',
+                    '../index.html',
+                    '../../index.html',
+                    '/',
+                    window.location.origin + '/index.html',
+                    window.location.origin,
+                    'home.html',
+                    '../home.html'
+                ];
+                
+                console.log('🔍 Trying homepage URLs:', homepageUrls);
+                
+                // Show user the options
+                const urlChoice = prompt(
+                    'Choose homepage URL:\n' + 
+                    homepageUrls.map((url, index) => `${index + 1}. ${url}`).join('\n') + 
+                    '\nEnter number (1-' + homepageUrls.length + ') or custom URL:'
+                );
+                
+                if (urlChoice) {
+                    const choiceNum = parseInt(urlChoice);
+                    let targetUrl;
+                    
+                    if (choiceNum >= 1 && choiceNum <= homepageUrls.length) {
+                        targetUrl = homepageUrls[choiceNum - 1];
+                    } else {
+                        targetUrl = urlChoice;
+                    }
+                    
+                    console.log('🎯 Navigating to:', targetUrl);
+                    alert('🎯 Navigating to: ' + targetUrl);
+                    window.location.href = targetUrl;
+                } else {
+                    alert('❌ Navigation cancelled by user');
+                }
+                
             } catch (error) {
-                console.error('Error opening JOSAA portal:', error);
-                // Fallback
-                window.location.href = josaaUrl;
+                console.error('❌ Error in goToHomepage():', error);
+                alert('❌ Error: ' + error.message);
             }
+        }
+
+        // JOSAA portal navigation function with extensive debugging
+        function openJOSAAPortal() {
+            try {
+                console.log('🌐 openJOSAAPortal() function called');
+                alert('🌐 JOSAA Portal button clicked! Opening portal...');
+                
+                const josaaUrl = 'https://josaa.nic.in';
+                console.log('🔗 Target URL:', josaaUrl);
+                
+                // Method 1: Try opening in new tab
+                console.log('📂 Attempting to open in new tab...');
+                try {
+                    const newWindow = window.open(josaaUrl, '_blank', 'noopener,noreferrer');
+                    
+                    // Check if it worked
+                    setTimeout(() => {
+                        if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
+                            console.log('⚠️ New tab blocked or failed');
+                            alert('⚠️ Popup blocked! Trying alternative method...');
+                            
+                            // Method 2: Ask user preference
+                            if (confirm('Open JOSAA portal in this window? (OK = Same window, Cancel = Copy URL)')) {
+                                console.log('🔄 Opening in same window...');
+                                window.location.href = josaaUrl;
+                            } else {
+                                // Method 3: Copy to clipboard and show URL
+                                try {
+                                    navigator.clipboard.writeText(josaaUrl).then(() => {
+                                        alert('📋 URL copied to clipboard!\n\n' + josaaUrl + '\n\nPaste this in a new browser tab.');
+                                    }).catch(() => {
+                                        alert('📋 Please copy this URL manually:\n\n' + josaaUrl);
+                                    });
+                                } catch (clipboardError) {
+                                    alert('📋 Please copy this URL manually:\n\n' + josaaUrl);
+                                }
+                            }
+                        } else {
+                            console.log('✅ New tab opened successfully');
+                            alert('✅ JOSAA portal opened in new tab!');
+                        }
+                    }, 1000);
+                    
+                } catch (newTabError) {
+                    console.error('❌ Error opening new tab:', newTabError);
+                    throw newTabError;
+                }
+                
+            } catch (error) {
+                console.error('❌ Error in openJOSAAPortal():', error);
+                alert('❌ Error occurred. Please visit manually:\n\nhttps://josaa.nic.in');
+            }
+        }
+
+        // Alternative button click handlers using event listeners
+        function initializeButtons() {
+            console.log('🔧 Initializing button event listeners...');
+            
+            // Find buttons by different methods
+            const homeButtons = [
+                document.querySelector('button[onclick*="goToHomepage"]'),
+                document.querySelector('.nav-button'),
+                ...document.querySelectorAll('button')
+            ].filter(btn => btn && btn.textContent.includes('Homepage'));
+            
+            const josaaButtons = [
+                document.querySelector('button[onclick*="openJOSAAPortal"]'),
+                ...document.querySelectorAll('button')
+            ].filter(btn => btn && btn.textContent.includes('JOSAA'));
+            
+            console.log('🏠 Found home buttons:', homeButtons.length);
+            console.log('🌐 Found JOSAA buttons:', josaaButtons.length);
+            
+            // Add event listeners as backup
+            homeButtons.forEach((button, index) => {
+                if (button) {
+                    console.log(`🔗 Adding listener to home button ${index + 1}`);
+                    button.addEventListener('click', function(e) {
+                        console.log('🏠 Event listener triggered for home button');
+                        e.preventDefault();
+                        goToHomepage();
+                    });
+                }
+            });
+            
+            josaaButtons.forEach((button, index) => {
+                if (button) {
+                    console.log(`🔗 Adding listener to JOSAA button ${index + 1}`);
+                    button.addEventListener('click', function(e) {
+                        console.log('🌐 Event listener triggered for JOSAA button');
+                        e.preventDefault();
+                        openJOSAAPortal();
+                    });
+                }
+            });
+        }
+
+        // Comprehensive debugging and testing functions
+        function runDiagnostics() {
+            console.log('🔍 === BUTTON DIAGNOSTICS ===');
+            console.log('📍 Current URL:', window.location.href);
+            console.log('🌐 User Agent:', navigator.userAgent);
+            console.log('🔒 Protocol:', window.location.protocol);
+            
+            // Test if functions exist
+            console.log('📦 Functions available:');
+            console.log('  - goToHomepage:', typeof goToHomepage);
+            console.log('  - openJOSAAPortal:', typeof openJOSAAPortal);
+            console.log('  - testJavaScript:', typeof testJavaScript);
+            
+            // Find and analyze buttons
+            const allButtons = document.querySelectorAll('button');
+            console.log('🔘 Total buttons found:', allButtons.length);
+            
+            allButtons.forEach((button, index) => {
+                console.log(`  Button ${index + 1}:`, {
+                    text: button.textContent.trim(),
+                    onclick: button.onclick,
+                    hasClickListener: button.onclick !== null,
+                    classes: button.className
+                });
+            });
+            
+            alert('🔍 Diagnostics complete! Check browser console (F12) for detailed info.');
+        }
+
+        // Force button functionality using multiple methods
+        function forceButtonSetup() {
+            console.log('🔧 Setting up button functionality...');
+            
+            // Method 1: Direct onclick assignment
+            const buttons = document.querySelectorAll('button');
+            buttons.forEach(button => {
+                const text = button.textContent.toLowerCase();
+                
+                if (text.includes('homepage') || text.includes('home')) {
+                    console.log('🏠 Setting up homepage button:', button.textContent.trim());
+                    button.onclick = function(e) {
+                        e.preventDefault();
+                        console.log('🏠 Direct onclick triggered');
+                        goToHomepage();
+                        return false;
+                    };
+                }
+                
+                if (text.includes('josaa') || text.includes('portal')) {
+                    console.log('🌐 Setting up JOSAA button:', button.textContent.trim());
+                    button.onclick = function(e) {
+                        e.preventDefault();
+                        console.log('🌐 Direct onclick triggered');
+                        openJOSAAPortal();
+                        return false;
+                    };
+                }
+            });
+            
+            // Method 2: Event listeners (backup)
+            initializeButtons();
+            
+            console.log('✅ Button setup complete');
+        }
+
+        // Test button by adding a visible test button
+        function addTestButton() {
+            const testButton = document.createElement('button');
+            testButton.textContent = '🧪 Test JavaScript';
+            testButton.style.cssText = `
+                position: fixed;
+                top: 10px;
+                right: 10px;
+                z-index: 9999;
+                background: #ff4444;
+                color: white;
+                border: none;
+                padding: 10px;
+                border-radius: 5px;
+                cursor: pointer;
+                font-weight: bold;
+            `;
+            testButton.onclick = testJavaScript;
+            document.body.appendChild(testButton);
+            console.log('🧪 Test button added to top-right corner');
         }
 
         // Add smooth scrolling for anchor links
@@ -1140,41 +1321,64 @@
             // Alt + H for homepage
             if (e.altKey && e.key === 'h') {
                 e.preventDefault();
+                console.log('⌨️ Keyboard shortcut: Alt+H pressed');
                 goToHomepage();
             }
             // Alt + J for JOSAA portal
             if (e.altKey && e.key === 'j') {
                 e.preventDefault();
+                console.log('⌨️ Keyboard shortcut: Alt+J pressed');
                 openJOSAAPortal();
+            }
+            // Alt + D for diagnostics
+            if (e.altKey && e.key === 'd') {
+                e.preventDefault();
+                runDiagnostics();
             }
         });
 
-        // Test functions on page load
+        // Main initialization function
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('JOSAA 2025 page loaded successfully');
-            console.log('Navigation buttons initialized');
-            console.log('Keyboard shortcuts: Alt+H (Homepage), Alt+J (JOSAA Portal)');
+            console.log('🚀 === JOSAA 2025 PAGE INITIALIZATION ===');
+            console.log('✅ DOM Content Loaded');
+            console.log('📅 Current date:', new Date().toISOString());
             
-            // Add button hover feedback
-            document.querySelectorAll('.nav-button, .cta-button').forEach(button => {
-                button.addEventListener('mouseenter', function() {
-                    this.style.transform = 'translateY(-2px)';
+            // Add test button for debugging
+            addTestButton();
+            
+            // Force button setup
+            setTimeout(() => {
+                forceButtonSetup();
+                
+                // Add visual feedback
+                document.querySelectorAll('.nav-button, .cta-button').forEach((button, index) => {
+                    button.addEventListener('mouseenter', function() {
+                        this.style.transform = 'translateY(-2px)';
+                        console.log(`🖱️ Mouse enter on button: ${this.textContent.trim()}`);
+                    });
+                    
+                    button.addEventListener('mouseleave', function() {
+                        this.style.transform = 'translateY(0)';
+                    });
+                    
+                    button.addEventListener('click', function(e) {
+                        console.log(`🖱️ Click detected on button: ${this.textContent.trim()}`);
+                        this.style.transform = 'translateY(0)';
+                        setTimeout(() => {
+                            this.style.transform = 'translateY(-2px)';
+                        }, 100);
+                    });
                 });
                 
-                button.addEventListener('mouseleave', function() {
-                    this.style.transform = 'translateY(0)';
-                });
-            });
-        });
-
-        // Add click feedback for buttons
-        document.querySelectorAll('.nav-button, .cta-button').forEach(button => {
-            button.addEventListener('click', function() {
-                this.style.transform = 'translateY(0)';
-                setTimeout(() => {
-                    this.style.transform = 'translateY(-2px)';
-                }, 100);
-            });
+                console.log('🎯 === READY FOR TESTING ===');
+                console.log('🔧 Available keyboard shortcuts:');
+                console.log('  Alt+H: Go to homepage');
+                console.log('  Alt+J: Open JOSAA portal');
+                console.log('  Alt+D: Run diagnostics');
+                console.log('🧪 Red test button added to top-right corner');
+                console.log('💡 If buttons still don\'t work, try keyboard shortcuts or test button');
+                
+            }, 500);
         });
     </script>
 </body>
