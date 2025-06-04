@@ -1027,132 +1027,66 @@
     </main>
 
     <script>
-        // Debug function to test if JavaScript is working
-        function testJavaScript() {
-            alert('✅ JavaScript is working! Button click detected.');
-            console.log('✅ JavaScript test successful');
-        }
-
-        // Enhanced homepage navigation function with extensive debugging
+        // Homepage navigation function
         function goToHomepage() {
             // Prevent multiple simultaneous calls
             if (window.homepageNavigationInProgress) {
-                console.log('🏠 Navigation already in progress, ignoring duplicate call');
                 return;
             }
             window.homepageNavigationInProgress = true;
             
             try {
-                console.log('🏠 === HOMEPAGE NAVIGATION STARTED ===');
-                
-                // Immediate visual feedback
-                const banner = document.createElement('div');
-                banner.style.cssText = `
-                    position: fixed;
-                    top: 50%;
-                    left: 50%;
-                    transform: translate(-50%, -50%);
-                    background: #006B6B;
-                    color: white;
-                    padding: 20px;
-                    border-radius: 10px;
-                    z-index: 99999;
-                    font-family: Arial, sans-serif;
-                    text-align: center;
-                    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-                `;
-                banner.innerHTML = '🏠 Navigating to Homepage...<br>Please wait...';
-                document.body.appendChild(banner);
-                
-                console.log('📱 Current URL:', window.location.href);
-                console.log('📱 Referrer:', document.referrer);
-                
-                // Method 1: Browser back (if coming from same domain)
+                // Check if coming from same domain and use browser back
                 if (document.referrer && document.referrer.includes('nextstepedu.co.in') && document.referrer !== window.location.href) {
-                    console.log('🔄 Using browser back to:', document.referrer);
                     setTimeout(() => {
                         window.history.back();
                         window.homepageNavigationInProgress = false;
-                    }, 1000);
+                    }, 100);
                     return;
                 }
                 
-                // Method 2: Try root directory
-                console.log('🔄 Navigating to root directory');
+                // Otherwise navigate to root directory
                 setTimeout(() => {
                     window.location.href = 'https://nextstepedu.co.in/';
                     window.homepageNavigationInProgress = false;
-                }, 1000);
+                }, 100);
                 
             } catch (error) {
-                console.error('❌ Error in goToHomepage():', error);
                 window.homepageNavigationInProgress = false;
-                alert('❌ Navigation error: ' + error.message);
+                console.error('Navigation error:', error);
             }
         }
 
-        // JOSAA portal navigation function with extensive debugging
+        // JOSAA portal navigation function
         function openJOSAAPortal() {
             // Prevent multiple simultaneous calls
             if (window.josaaNavigationInProgress) {
-                console.log('🌐 JOSAA navigation already in progress, ignoring duplicate call');
                 return;
             }
             window.josaaNavigationInProgress = true;
             
             try {
-                console.log('🌐 === JOSAA PORTAL NAVIGATION STARTED ===');
-                
-                // Immediate visual feedback
-                const banner = document.createElement('div');
-                banner.style.cssText = `
-                    position: fixed;
-                    top: 50%;
-                    left: 50%;
-                    transform: translate(-50%, -50%);
-                    background: #D4AF37;
-                    color: black;
-                    padding: 20px;
-                    border-radius: 10px;
-                    z-index: 99999;
-                    font-family: Arial, sans-serif;
-                    text-align: center;
-                    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-                `;
-                banner.innerHTML = '🌐 Opening JOSAA Portal!<br>Please wait...';
-                document.body.appendChild(banner);
-                
                 const josaaUrl = 'https://josaa.nic.in';
-                console.log('🔗 Target URL:', josaaUrl);
                 
-                // Simple and reliable method: open in new tab
+                // Open in new tab
                 setTimeout(() => {
                     try {
                         const newWindow = window.open(josaaUrl, '_blank', 'noopener,noreferrer');
-                        if (newWindow) {
-                            console.log('✅ JOSAA portal opened in new tab');
-                        } else {
-                            console.log('⚠️ Popup blocked, trying same window');
+                        if (!newWindow) {
+                            // Fallback if popup blocked
                             if (confirm('Popup blocked! Open JOSAA portal in this window?')) {
                                 window.location.href = josaaUrl;
                             }
                         }
                     } catch (error) {
-                        console.log('❌ Error opening new tab, using same window');
                         window.location.href = josaaUrl;
                     }
-                    
-                    // Remove banner
-                    if (banner.parentNode) {
-                        document.body.removeChild(banner);
-                    }
                     window.josaaNavigationInProgress = false;
-                }, 1000);
+                }, 100);
                 
             } catch (error) {
-                console.error('❌ Error in openJOSAAPortal():', error);
                 window.josaaNavigationInProgress = false;
-                alert('❌ Error occurred. Please visit: https://josaa.nic.in');
+                console.error('JOSAA portal error:', error);
             }
         }
 
@@ -1368,7 +1302,7 @@
             console.log('🧪 Test button added to top-right corner');
         }
 
-        // Add smooth scrolling for anchor links
+        // Smooth scrolling for anchor links
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', function (e) {
                 e.preventDefault();
@@ -1381,7 +1315,7 @@
             });
         });
 
-        // Add animation for timeline items on scroll
+        // Animation for timeline items on scroll
         const observerOptions = {
             threshold: 0.1,
             rootMargin: '0px 0px -50px 0px'
@@ -1396,7 +1330,7 @@
             });
         }, observerOptions);
 
-        // Observe timeline items
+        // Initialize animations
         document.querySelectorAll('.timeline-item').forEach((item, index) => {
             item.style.opacity = '0';
             item.style.transform = 'translateY(20px)';
@@ -1404,7 +1338,6 @@
             observer.observe(item);
         });
 
-        // Observe step cards
         document.querySelectorAll('.step-card').forEach((card, index) => {
             card.style.opacity = '0';
             card.style.transform = 'translateY(20px)';
@@ -1412,69 +1345,33 @@
             observer.observe(card);
         });
 
-        // Add keyboard navigation support
+        // Keyboard shortcuts
         document.addEventListener('keydown', function(e) {
-            // Alt + H for homepage
             if (e.altKey && e.key === 'h') {
                 e.preventDefault();
-                console.log('⌨️ Keyboard shortcut: Alt+H pressed');
                 goToHomepage();
             }
-            // Alt + J for JOSAA portal
             if (e.altKey && e.key === 'j') {
                 e.preventDefault();
-                console.log('⌨️ Keyboard shortcut: Alt+J pressed');
                 openJOSAAPortal();
-            }
-            // Alt + D for diagnostics
-            if (e.altKey && e.key === 'd') {
-                e.preventDefault();
-                runDiagnostics();
             }
         });
 
-        // Main initialization function
+        // Initialize page
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 === JOSAA 2025 PAGE INITIALIZATION ===');
-            console.log('✅ DOM Content Loaded');
-            console.log('📅 Current date:', new Date().toISOString());
+            // Set up button functionality
+            setTimeout(initializeButtons, 100);
             
-            // Add test button for debugging
-            addTestButton();
-            
-            // Clean button setup (no duplicates)
-            setTimeout(() => {
-                forceButtonSetup();
-                
-                // Add visual feedback
-                document.querySelectorAll('.nav-button, .cta-button').forEach((button, index) => {
-                    button.addEventListener('mouseenter', function() {
-                        this.style.transform = 'translateY(-2px)';
-                        console.log(`🖱️ Mouse enter on button: ${this.textContent.trim()}`);
-                    });
-                    
-                    button.addEventListener('mouseleave', function() {
-                        this.style.transform = 'translateY(0)';
-                    });
-                    
-                    button.addEventListener('click', function(e) {
-                        console.log(`🖱️ Click detected on button: ${this.textContent.trim()}`);
-                        this.style.transform = 'translateY(0)';
-                        setTimeout(() => {
-                            this.style.transform = 'translateY(-2px)';
-                        }, 100);
-                    });
+            // Add hover effects
+            document.querySelectorAll('.nav-button, .cta-button').forEach(button => {
+                button.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-2px)';
                 });
                 
-                console.log('🎯 === READY FOR TESTING ===');
-                console.log('🔧 Available keyboard shortcuts:');
-                console.log('  Alt+H: Go to homepage');
-                console.log('  Alt+J: Open JOSAA portal');
-                console.log('  Alt+D: Run diagnostics');
-                console.log('🧪 Red test button added to top-right corner');
-                console.log('💡 Buttons should now work without duplicates!');
-                
-            }, 500);
+                button.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0)';
+                });
+            });
         });
     </script>
 </body>
