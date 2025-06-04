@@ -393,19 +393,33 @@
         .cta-button {
             display: inline-block;
             background: linear-gradient(to right, var(--primary-color), var(--primary-dark));
-            color: white;
-            text-decoration: none;
+            color: white !important;
+            text-decoration: none !important;
             padding: 15px 30px;
             border-radius: 50px;
             font-weight: 600;
             box-shadow: 0 4px 15px rgba(0, 107, 107, 0.4);
             transition: all 0.3s ease;
-            margin-top: 20px;
+            margin: 10px;
+            cursor: pointer;
+            border: none;
+            font-size: 1rem;
         }
         
         .cta-button:hover {
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(0, 107, 107, 0.5);
+            color: white !important;
+            text-decoration: none !important;
+        }
+        
+        .cta-button:visited {
+            color: white !important;
+            text-decoration: none !important;
+        }
+        
+        .cta-button:active {
+            transform: translateY(0);
         }
         
         .text-center {
@@ -455,11 +469,11 @@
             <img src="nextstep_logo.jpeg" alt="NextStep Logo" class="logo-img">
             <h1 class="tagline">JOSAA 2025 Counselling Process</h1>
             <p class="secondary-tagline">Complete Guide with Exact Dates & Step-by-Step Procedure</p>
-            <div style="margin-top: 30px;">
-                <a href="index.html" class="cta-button" style="margin-right: 15px;">
+            <div style="margin-top: 30px; text-align: center;">
+                <a href="javascript:void(0)" onclick="goToHomepage()" class="cta-button" style="margin-right: 15px;">
                     <i class="fas fa-home"></i> Back to Homepage
                 </a>
-                <a href="https://josaa.nic.in" target="_blank" class="cta-button">
+                <a href="https://josaa.nic.in" target="_blank" rel="noopener noreferrer" class="cta-button">
                     <i class="fas fa-external-link-alt"></i> Official JOSAA Portal
                 </a>
             </div>
@@ -944,6 +958,33 @@
     </main>
 
     <script>
+        // Homepage navigation function
+        function goToHomepage() {
+            // Try multiple possible homepage URLs
+            const possibleHomepages = [
+                'index.html',
+                '../index.html',
+                '/',
+                window.location.origin,
+                window.location.origin + '/index.html'
+            ];
+            
+            // Try to go to the most likely homepage
+            try {
+                // First try going back in history if there's a referrer
+                if (document.referrer && document.referrer.includes(window.location.origin)) {
+                    window.history.back();
+                    return;
+                }
+                
+                // Otherwise try index.html in current directory
+                window.location.href = 'index.html';
+            } catch (error) {
+                // Fallback to root
+                window.location.href = '/';
+            }
+        }
+
         // Add smooth scrolling for anchor links
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', function (e) {
@@ -983,6 +1024,12 @@
             card.style.transform = 'translateY(20px)';
             card.style.transition = `opacity 0.6s ease ${index * 0.1}s, transform 0.6s ease ${index * 0.1}s`;
             observer.observe(card);
+        });
+
+        // Test JOSAA portal link on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('JOSAA 2025 page loaded successfully');
+            console.log('Official JOSAA portal link: https://josaa.nic.in');
         });
     </script>
 </body>
