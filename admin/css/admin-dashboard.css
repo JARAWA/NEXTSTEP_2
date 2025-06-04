@@ -2938,3 +2938,627 @@ body {
 .loading-state[style*="danger"] i {
     color: var(--danger-color, #e74c3c);
 }
+
+/* ========================================
+   SAFE CSS ADDITIONS FOR USER MANAGEMENT
+   Add this to the END of admin-dashboard.css
+   ======================================== */
+
+/* Enhanced Filter Section - User Management Page Only */
+.dashboard-content .content-card {
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+    border: 1px solid rgba(0, 107, 107, 0.08);
+}
+
+.dashboard-content .card-header {
+    padding: 24px 30px;
+    background: linear-gradient(135deg, rgba(0, 107, 107, 0.03), rgba(0, 107, 107, 0.01));
+}
+
+/* Filter Container Enhancements */
+.filter-section .filter-container {
+    padding: 30px;
+    background: linear-gradient(135deg, #fafbfc, #f8f9fa);
+}
+
+/* Horizontal Filter Layout */
+.filter-container.horizontal-filters {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 24px;
+    align-items: end;
+}
+
+/* Enhanced Filter Group Styling */
+.horizontal-filters .filter-group label {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+}
+
+.horizontal-filters .filter-select,
+.horizontal-filters .filter-input {
+    padding: 14px 16px;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    font-size: 14px;
+    color: var(--text-primary);
+    background: white;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    font-weight: 500;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 12px center;
+    background-repeat: no-repeat;
+    background-size: 16px;
+    padding-right: 40px;
+}
+
+.horizontal-filters .filter-input {
+    background-image: none;
+    padding-right: 16px;
+}
+
+.horizontal-filters .filter-select:focus,
+.horizontal-filters .filter-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 4px rgba(0, 107, 107, 0.1);
+    transform: translateY(-1px);
+}
+
+.horizontal-filters .filter-select:hover,
+.horizontal-filters .filter-input:hover {
+    border-color: #cbd5e1;
+    transform: translateY(-1px);
+}
+
+/* Subscription Filter Buttons */
+.subscription-filter-buttons {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+}
+
+.subscription-filter-btn {
+    padding: 12px 20px;
+    border: 2px solid #e2e8f0;
+    background: white;
+    color: #64748b;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    position: relative;
+    overflow: hidden;
+    min-width: 100px;
+    justify-content: center;
+}
+
+.subscription-filter-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+    transition: left 0.5s;
+}
+
+.subscription-filter-btn:hover::before {
+    left: 100%;
+}
+
+.subscription-filter-btn:hover {
+    border-color: var(--primary-color);
+    background: rgba(0, 107, 107, 0.05);
+    color: var(--primary-color);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 107, 107, 0.15);
+}
+
+.subscription-filter-btn.active {
+    border-color: var(--primary-color);
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(0, 107, 107, 0.3);
+}
+
+.subscription-filter-btn i {
+    font-size: 14px;
+}
+
+/* Enhanced Date Filter */
+.horizontal-filters .date-inputs {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: white;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 8px 16px;
+    transition: all 0.3s ease;
+}
+
+.horizontal-filters .date-inputs:hover {
+    border-color: #cbd5e1;
+}
+
+.horizontal-filters .date-inputs:focus-within {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 4px rgba(0, 107, 107, 0.1);
+}
+
+.horizontal-filters .date-inputs input {
+    border: none;
+    padding: 6px 8px;
+    font-size: 14px;
+    color: var(--text-primary);
+    background: transparent;
+    flex: 1;
+    min-width: 120px;
+}
+
+.horizontal-filters .date-inputs input:focus {
+    outline: none;
+}
+
+.horizontal-filters .date-inputs span {
+    color: var(--text-secondary);
+    font-weight: 500;
+    font-size: 14px;
+    padding: 0 4px;
+}
+
+/* Enhanced Filter Actions */
+.horizontal-filters .filter-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.horizontal-filters .filter-actions .btn {
+    padding: 14px 24px;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 14px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 2px solid transparent;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 80px;
+    justify-content: center;
+}
+
+.horizontal-filters .filter-actions .btn.primary {
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+    color: white;
+    border-color: var(--primary-color);
+}
+
+.horizontal-filters .filter-actions .btn.primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 107, 107, 0.3);
+}
+
+.horizontal-filters .filter-actions .btn.secondary {
+    background: white;
+    color: var(--text-secondary);
+    border-color: #e2e8f0;
+}
+
+.horizontal-filters .filter-actions .btn.secondary:hover {
+    background: #f8fafc;
+    color: var(--text-primary);
+    border-color: #cbd5e1;
+    transform: translateY(-1px);
+}
+
+/* TABLE FIXES - Ensures action buttons are always visible */
+#users-table {
+    width: 100% !important;
+    min-width: 1200px !important;
+    table-layout: fixed !important;
+}
+
+/* Fixed column widths to ensure action buttons are visible */
+#users-table th:nth-child(1),
+#users-table td:nth-child(1) { width: 50px !important; } /* Checkbox */
+
+#users-table th:nth-child(2),
+#users-table td:nth-child(2) { width: 200px !important; } /* Name */
+
+#users-table th:nth-child(3),
+#users-table td:nth-child(3) { width: 180px !important; } /* Email */
+
+#users-table th:nth-child(4),
+#users-table td:nth-child(4) { width: 120px !important; } /* Mobile */
+
+#users-table th:nth-child(5),
+#users-table td:nth-child(5) { width: 150px !important; } /* Exams */
+
+#users-table th:nth-child(6),
+#users-table td:nth-child(6) { width: 100px !important; } /* Registered */
+
+#users-table th:nth-child(7),
+#users-table td:nth-child(7) { width: 80px !important; } /* Role */
+
+#users-table th:nth-child(8),
+#users-table td:nth-child(8) { width: 80px !important; } /* Status */
+
+#users-table th:nth-child(9),
+#users-table td:nth-child(9) { width: 160px !important; } /* Subscription */
+
+#users-table th:nth-child(10),
+#users-table td:nth-child(10) { width: 140px !important; } /* Actions - CRITICAL FIX */
+
+/* Enhanced Table Header */
+#users-table th {
+    background: linear-gradient(135deg, #f8fafc, #f1f5f9) !important;
+    padding: 18px 16px !important;
+    font-weight: 600 !important;
+    font-size: 13px !important;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+#users-table th i.fa-sort {
+    margin-left: 8px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+#users-table th i.fa-sort:hover {
+    color: var(--primary-color);
+    transform: scale(1.1);
+}
+
+/* Enhanced Table Rows */
+#users-table tbody tr {
+    transition: all 0.3s ease;
+    background: white;
+}
+
+#users-table tbody tr:hover {
+    background: rgba(0, 107, 107, 0.02) !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+#users-table td {
+    padding: 16px !important;
+    vertical-align: middle !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Enhanced Action Buttons */
+.table-actions {
+    display: flex !important;
+    gap: 6px !important;
+    justify-content: center !important;
+    align-items: center !important;
+}
+
+.table-action-btn {
+    background: white !important;
+    border: 2px solid #e2e8f0 !important;
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 8px !important;
+    cursor: pointer !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    color: var(--text-secondary) !important;
+    font-size: 13px !important;
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+.table-action-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+    transition: left 0.3s;
+}
+
+.table-action-btn:hover::before {
+    left: 100%;
+}
+
+.table-action-btn:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+.table-action-btn.view:hover {
+    border-color: var(--success-color) !important;
+    color: var(--success-color) !important;
+    background: rgba(39, 174, 96, 0.05) !important;
+}
+
+.table-action-btn.edit:hover {
+    border-color: var(--info-color) !important;
+    color: var(--info-color) !important;
+    background: rgba(52, 152, 219, 0.05) !important;
+}
+
+.table-action-btn.more:hover {
+    border-color: var(--secondary-color) !important;
+    color: var(--secondary-color) !important;
+    background: rgba(212, 175, 55, 0.05) !important;
+}
+
+.table-action-btn.delete:hover {
+    border-color: var(--danger-color) !important;
+    color: var(--danger-color) !important;
+    background: rgba(231, 76, 60, 0.05) !important;
+}
+
+/* Enhanced User Cell */
+.user-cell {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    min-width: 0 !important;
+}
+
+.table-avatar {
+    width: 36px !important;
+    height: 36px !important;
+    border-radius: 50% !important;
+    object-fit: cover !important;
+    border: 2px solid var(--primary-color) !important;
+    flex-shrink: 0 !important;
+}
+
+.user-info {
+    flex: 1 !important;
+    min-width: 0 !important;
+}
+
+.user-name {
+    font-weight: 600 !important;
+    color: var(--text-primary) !important;
+    font-size: 14px !important;
+    margin-bottom: 2px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+.user-id {
+    font-size: 11px !important;
+    color: var(--text-secondary) !important;
+    font-weight: 500 !important;
+}
+
+/* Enhanced Status Badges */
+.status-badge {
+    padding: 6px 12px !important;
+    border-radius: 16px !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    white-space: nowrap !important;
+    border: 1px solid transparent !important;
+}
+
+.status-active {
+    background: linear-gradient(135deg, rgba(39, 174, 96, 0.1), rgba(39, 174, 96, 0.05)) !important;
+    color: var(--success-color) !important;
+    border-color: rgba(39, 174, 96, 0.2) !important;
+}
+
+.status-inactive {
+    background: linear-gradient(135deg, rgba(149, 165, 166, 0.1), rgba(149, 165, 166, 0.05)) !important;
+    color: var(--text-muted) !important;
+    border-color: rgba(149, 165, 166, 0.2) !important;
+}
+
+.status-premium {
+    background: linear-gradient(135deg, rgba(212, 175, 55, 0.1), rgba(212, 175, 55, 0.05)) !important;
+    color: var(--secondary-color) !important;
+    border-color: rgba(212, 175, 55, 0.2) !important;
+}
+
+.status-verified {
+    background: linear-gradient(135deg, rgba(52, 152, 219, 0.1), rgba(52, 152, 219, 0.05)) !important;
+    color: var(--info-color) !important;
+    border-color: rgba(52, 152, 219, 0.2) !important;
+}
+
+.status-expired {
+    background: linear-gradient(135deg, rgba(231, 76, 60, 0.1), rgba(231, 76, 60, 0.05)) !important;
+    color: var(--danger-color) !important;
+    border-color: rgba(231, 76, 60, 0.2) !important;
+}
+
+/* Enhanced Exam Tags */
+.exam-tags {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 4px !important;
+}
+
+.exam-tag {
+    background: linear-gradient(135deg, rgba(0, 107, 107, 0.1), rgba(0, 107, 107, 0.05)) !important;
+    color: var(--primary-color) !important;
+    padding: 4px 8px !important;
+    border-radius: 8px !important;
+    font-size: 10px !important;
+    font-weight: 600 !important;
+    white-space: nowrap !important;
+    border: 1px solid rgba(0, 107, 107, 0.2) !important;
+}
+
+/* Enhanced Pagination */
+.pagination-container {
+    background: white !important;
+    padding: 24px 30px !important;
+    border-radius: 16px !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08) !important;
+    border: 1px solid rgba(0, 107, 107, 0.08) !important;
+}
+
+#prev-page, #next-page {
+    width: 40px !important;
+    height: 40px !important;
+    border: 2px solid #e2e8f0 !important;
+    background: white !important;
+    border-radius: 10px !important;
+    transition: all 0.3s ease !important;
+    font-size: 14px !important;
+}
+
+#prev-page:hover:not(:disabled), 
+#next-page:hover:not(:disabled) {
+    border-color: var(--primary-color) !important;
+    color: var(--primary-color) !important;
+    background: rgba(0, 107, 107, 0.05) !important;
+    transform: translateY(-1px) !important;
+}
+
+.page-number {
+    width: 40px !important;
+    height: 40px !important;
+    border: 2px solid #e2e8f0 !important;
+    background: white !important;
+    border-radius: 10px !important;
+    font-weight: 600 !important;
+    transition: all 0.3s ease !important;
+}
+
+.page-number:hover {
+    border-color: var(--primary-color) !important;
+    color: var(--primary-color) !important;
+    background: rgba(0, 107, 107, 0.05) !important;
+    transform: translateY(-1px) !important;
+}
+
+.page-number.active {
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark)) !important;
+    border-color: var(--primary-color) !important;
+    color: white !important;
+    box-shadow: 0 4px 12px rgba(0, 107, 107, 0.3) !important;
+}
+
+/* Enhanced Bulk Actions */
+.bulk-actions-container {
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark)) !important;
+    border-radius: 16px !important;
+    box-shadow: 0 8px 30px rgba(0, 107, 107, 0.3) !important;
+    padding: 20px 30px !important;
+}
+
+.bulk-action-btn {
+    background: rgba(255, 255, 255, 0.15) !important;
+    border: 2px solid rgba(255, 255, 255, 0.2) !important;
+    color: white !important;
+    padding: 10px 16px !important;
+    border-radius: 10px !important;
+    font-weight: 600 !important;
+    backdrop-filter: blur(10px) !important;
+}
+
+.bulk-action-btn:hover {
+    background: rgba(255, 255, 255, 0.25) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Responsive Design */
+@media (max-width: 1400px) {
+    .horizontal-filters {
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)) !important;
+        gap: 20px !important;
+    }
+    
+    .filter-group.subscription-buttons {
+        grid-column: span 3 !important;
+    }
+    
+    .filter-group.date-filter {
+        grid-column: span 2 !important;
+    }
+}
+
+@media (max-width: 1200px) {
+    #users-table {
+        min-width: 1000px !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .filter-container.horizontal-filters {
+        grid-template-columns: 1fr !important;
+        padding: 20px !important;
+    }
+    
+    .filter-group.subscription-buttons,
+    .filter-group.date-filter {
+        grid-column: span 1 !important;
+    }
+    
+    .subscription-filter-buttons {
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 8px !important;
+    }
+    
+    .subscription-filter-btn {
+        font-size: 12px !important;
+        padding: 10px 16px !important;
+        min-width: auto !important;
+    }
+    
+    #users-table {
+        min-width: 800px !important;
+    }
+    
+    .table-action-btn {
+        width: 28px !important;
+        height: 28px !important;
+        font-size: 11px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .subscription-filter-buttons {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+/* Focus states for accessibility */
+.subscription-filter-btn:focus-visible,
+.table-action-btn:focus-visible,
+.page-number:focus-visible {
+    outline: 2px solid var(--primary-color) !important;
+    outline-offset: 2px !important;
+}
+
+/* ======================================== 
+   END OF SAFE CSS ADDITIONS
+   ======================================== */
