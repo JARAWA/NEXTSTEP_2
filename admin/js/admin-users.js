@@ -41,7 +41,7 @@ class AdminUserManagement {
         this.filteredUsers = [];
         this.totalUsers = 0;
         this.currentPage = 1;
-        this.pageSize = 10;
+        this.pageSize = 100; // Changed default from 10 to 100
         this.lastVisible = null;
         this.firstVisible = null;
         this.selectedUserIds = new Set();
@@ -102,9 +102,17 @@ class AdminUserManagement {
             this.filters.status = e.target.value;
         });
 
-        // Subscription filter
-        document.getElementById('subscription-filter')?.addEventListener('change', (e) => {
-            this.filters.subscription = e.target.value;
+        // Subscription filter buttons
+        document.querySelectorAll('.subscription-filter-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                // Remove active class from all buttons
+                document.querySelectorAll('.subscription-filter-btn').forEach(b => b.classList.remove('active'));
+                // Add active class to clicked button
+                e.target.classList.add('active');
+                // Set filter value
+                this.filters.subscription = e.target.dataset.value;
+                this.applyFilters();
+            });
         });
         
         // Date filters
@@ -229,6 +237,12 @@ class AdminUserManagement {
     // Initialize user management
     async initializeAdminUserManagement() {
         try {
+            // Set default page size in dropdown
+            const pageSizeSelect = document.getElementById('page-size');
+            if (pageSizeSelect) {
+                pageSizeSelect.value = this.pageSize.toString();
+            }
+
             // Check authentication state
             this.auth.onAuthStateChanged(async (user) => {
                 if (user) {
@@ -696,7 +710,6 @@ class AdminUserManagement {
         const roleFilter = document.getElementById('role-filter');
         const examFilter = document.getElementById('exam-filter');
         const statusFilter = document.getElementById('status-filter');
-        const subscriptionFilter = document.getElementById('subscription-filter');
         const dateFrom = document.getElementById('date-from');
         const dateTo = document.getElementById('date-to');
         const userSearch = document.getElementById('user-search');
@@ -704,10 +717,17 @@ class AdminUserManagement {
         if (roleFilter) roleFilter.value = 'all';
         if (examFilter) examFilter.value = 'all';
         if (statusFilter) statusFilter.value = 'all';
-        if (subscriptionFilter) subscriptionFilter.value = 'all';
         if (dateFrom) dateFrom.value = '';
         if (dateTo) dateTo.value = '';
         if (userSearch) userSearch.value = '';
+        
+        // Reset subscription filter buttons
+        document.querySelectorAll('.subscription-filter-btn').forEach(btn => {
+            btn.classList.remove('active');
+            if (btn.dataset.value === 'all') {
+                btn.classList.add('active');
+            }
+        });
         
         // Apply reset filters
         this.applyFilters();
@@ -890,7 +910,7 @@ class AdminUserManagement {
         });
     }
 
-    // Save user changes
+    // Save user changes - FIXED to maintain list order
     async saveUserChanges() {
         try {
             const userId = document.getElementById('edit-user-id').value;
@@ -988,12 +1008,26 @@ class AdminUserManagement {
             this.showToast('User updated successfully', 'success');
             this.closeModal('userEditModal');
             
-            // Reload users to reflect changes
-            this.loadUsers();
+            // Instead of reloading all users, just update the specific user in the current list
+            this.updateUserInCurrentList(userId, userData);
             
         } catch (error) {
             console.error('Error saving user changes:', error);
             this.showToast('Error saving changes', 'error');
+        }
+    }
+
+    // Update user in current list to maintain order
+    updateUserInCurrentList(userId, updatedData) {
+        // Find and update the user in the current users array
+        const userIndex = this.users.findIndex(user => user.id === userId);
+        if (userIndex !== -1) {
+            // Merge the updated data with existing data
+            this.users[userIndex] = { ...this.users[userIndex], ...updatedData };
+            
+            // Re-apply filters and re-render the table
+            this.applyFiltersToUsers();
+            this.renderUsersTable();
         }
     }
 
@@ -1491,8 +1525,13 @@ class AdminUserManagement {
             this.showToast('Subscription updated successfully', 'success');
             this.closeModal('subscriptionModal');
             
-            // Reload users to reflect changes
-            this.loadUsers();
+            // Update the user in current list instead of reloading
+            const userIndex = this.users.findIndex(user => user.id === userId);
+            if (userIndex !== -1) {
+                this.users[userIndex].subscription = subscriptionData;
+                this.applyFiltersToUsers();
+                this.renderUsersTable();
+            }
             
         } catch (error) {
             console.error('Error saving subscription changes:', error);
